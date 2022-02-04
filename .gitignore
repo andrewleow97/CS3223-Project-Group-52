@@ -24,3 +24,4 @@ hs_err_pid*
 .metadata/
 test/
 java-2021-12/
+*.classpath
