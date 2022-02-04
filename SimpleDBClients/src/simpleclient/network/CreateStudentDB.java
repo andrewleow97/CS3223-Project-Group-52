@@ -13,7 +13,11 @@ public class CreateStudentDB {
          String s = "create table STUDENT(SId int, SName varchar(10), MajorId int, GradYear int)";
          stmt.executeUpdate(s);
          System.out.println("Table STUDENT created.");
-
+         
+         s = "create index MajorId on student (MajorId)";
+         stmt.executeUpdate(s);
+         System.out.println("Index MajorId created.");
+         
          s = "insert into STUDENT(SId, SName, MajorId, GradYear) values ";
          String[] studvals = {"(1, 'joe', 10, 2021)",
                "(2, 'amy', 20, 2020)",
@@ -28,6 +32,8 @@ public class CreateStudentDB {
             stmt.executeUpdate(s + studvals[i]);
          System.out.println("STUDENT records inserted.");
 
+
+         
          s = "create table DEPT(DId int, DName varchar(8))";
          stmt.executeUpdate(s);
          System.out.println("Table DEPT created.");
@@ -84,9 +90,7 @@ public class CreateStudentDB {
             stmt.executeUpdate(s + enrollvals[i]);
          System.out.println("ENROLL records inserted.");
          
-         s = "create index MajorId on student (MajorId)";
-         stmt.executeUpdate(s);
-         System.out.println("Index MajorId created.");
+
       }
       catch(SQLException e) {
          e.printStackTrace();
