@@ -74,7 +74,7 @@ class IndexMgr {
          String indextype = ts.getString("indextype");
          Layout tblLayout = tblmgr.getLayout(tblname, tx);
          StatInfo tblsi = statmgr.getStatInfo(tblname, tblLayout, tx);
-         IndexInfo ii = new IndexInfo(idxname, fldname, tblLayout.schema(), tx, tblsi); // change here
+         IndexInfo ii = new IndexInfo(idxname, fldname, indextype, tblLayout.schema(), tx, tblsi); // change here
          result.put(fldname, ii);
       }
       ts.close();

@@ -32,7 +32,7 @@ public class IndexInfo {
     * @param tblSchema the schema of the table
     * @param si the statistics for the table
     */
-   public IndexInfo(String idxname, String fldname, Schema tblSchema,
+   public IndexInfo(String idxname, String fldname, String indexType, Schema tblSchema,
                     Transaction tx,  StatInfo si) {
       this.idxname = idxname;
       this.fldname = fldname;
@@ -40,6 +40,7 @@ public class IndexInfo {
       this.tblSchema = tblSchema;
       this.idxLayout = createIdxLayout();
       this.si = si;
+      this.indexType = indexType;
    }
    
    /**
