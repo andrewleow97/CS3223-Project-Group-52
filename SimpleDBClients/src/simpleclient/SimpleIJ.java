@@ -6,8 +6,8 @@ import simpledb.jdbc.network.NetworkDriver;
 
 public class SimpleIJ {
    public static void main(String[] args) {
-	  //Jason Try comment Hello
-      Scanner sc = new Scanner(System.in);
+
+	  Scanner sc = new Scanner(System.in);
       System.out.println("Connect> ");
       String s = sc.nextLine();
       Driver d = (s.contains("//")) ? new NetworkDriver() : new EmbeddedDriver();
