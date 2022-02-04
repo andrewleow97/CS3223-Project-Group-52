@@ -22,6 +22,7 @@ public class IndexInfo {
    private Schema tblSchema;
    private Layout idxLayout;
    private StatInfo si;
+   private String indexType = "hash";
    
    /**
     * Create an IndexInfo object for the specified index.
@@ -46,8 +47,11 @@ public class IndexInfo {
     * @return the Index object associated with this information
     */
    public Index open() {
-//      return new HashIndex(tx, idxname, idxLayout);
-    return new BTreeIndex(tx, idxname, idxLayout);
+	if (this.indexType == "hash") {   
+		return new HashIndex(tx, idxname, idxLayout);
+	} else {
+		return new BTreeIndex(tx, idxname, idxLayout);
+	}
    }
    
    /**
@@ -64,8 +68,11 @@ public class IndexInfo {
    public int blocksAccessed() {
       int rpb = tx.blockSize() / idxLayout.slotSize();
       int numblocks = si.recordsOutput() / rpb;
-//      return HashIndex.searchCost(numblocks, rpb);
-    return BTreeIndex.searchCost(numblocks, rpb);
+      if (this.indexType == "hash") {  
+    	  return HashIndex.searchCost(numblocks, rpb);
+      } else {
+    	  return BTreeIndex.searchCost(numblocks, rpb);
+      }
    }
    
    /**

@@ -10,6 +10,7 @@ import java.io.*;
 public class Lexer {
    private Collection<String> keywords;
    private Collection<String> comparators;
+   private Collection<String> indexes;
    private StreamTokenizer tok;
    
    /**
@@ -19,6 +20,7 @@ public class Lexer {
    public Lexer(String s) {
       initKeywords();
       initComparators();
+      initIndex();
       tok = new StreamTokenizer(new StringReader(s));
       tok.ordinaryChar('.');   //disallow "." in identifiers
       tok.wordChars('_', '_'); //allow "_" in identifiers
@@ -84,6 +86,15 @@ public class Lexer {
     */
    public boolean matchComparator() {
 	   return tok.ttype==StreamTokenizer.TT_WORD && comparators.contains(tok.sval);
+   }
+   
+   /**
+    * Returns true if the current token is in the specified index list.
+    * @param w the comparator string
+    * @return true if that index is the current token
+    */
+   public boolean matchIndex() {
+	   return tok.ttype==StreamTokenizer.TT_WORD && indexes.contains(tok.sval);
    }
    
 //Methods to "eat" the current token
@@ -170,6 +181,21 @@ public class Lexer {
       return s;
    }
    
+   /**
+    * Throws an exception if the current token is not in the
+    * specified index list. 
+    * Otherwise, moves to the next token.
+    * @param w the index string
+    * @return s the index string
+    */
+   public String eatIndex() {
+      if (!matchIndex())
+         throw new BadSyntaxException();
+      String s = tok.sval;
+      nextToken();
+      return s;
+   }
+   
    private void nextToken() {
       try {
          tok.nextToken();
@@ -182,10 +208,14 @@ public class Lexer {
    private void initKeywords() {
       keywords = Arrays.asList("select", "from", "where", "and",
                                "insert", "into", "values", "delete", "update", "set", 
-                               "create", "table", "int", "varchar", "view", "as", "index", "on");
+                               "create", "table", "int", "varchar", "view", "as", "index", "on", "using");
    }
    
    private void initComparators() {
 	   comparators = Arrays.asList("=", "<", "<=", ">", ">=", "!=", "<>");
+   }
+   
+   private void initIndex() {
+	   indexes = Arrays.asList("hash", "btree");
    }
 }

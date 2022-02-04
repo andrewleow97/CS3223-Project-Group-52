@@ -5,15 +5,16 @@ package simpledb.parse;
  * @author Edward Sciore
  */
 public class CreateIndexData {
-   private String idxname, tblname, fldname;
+   private String idxname, tblname, fldname, indexType;
    
    /**
     * Saves the table and field names of the specified index.
     */
-   public CreateIndexData(String idxname, String tblname, String fldname) {
+   public CreateIndexData(String idxname, String tblname, String fldname, String indexType) {
       this.idxname = idxname;
       this.tblname = tblname;
       this.fldname = fldname;
+      this.indexType = indexType;
    }
    
    /**
@@ -38,6 +39,14 @@ public class CreateIndexData {
     */
    public String fieldName() {
       return fldname;
+   }
+   
+   /**
+    * Returns the name of the index type.
+    * @return the name of the index type.
+    */
+   public String indexType() {
+      return indexType;
    }
 }
 
