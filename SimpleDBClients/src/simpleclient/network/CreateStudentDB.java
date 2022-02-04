@@ -16,7 +16,7 @@ public class CreateStudentDB {
          
          s = "create index MajorId on student (MajorId)";
          stmt.executeUpdate(s);
-         System.out.println("Index MajorId created.");
+         System.out.println("Index indexMajorId_Student on student created.");
          
          s = "insert into STUDENT(SId, SName, MajorId, GradYear) values ";
          String[] studvals = {"(1, 'joe', 10, 2021)",
@@ -31,8 +31,6 @@ public class CreateStudentDB {
          for (int i=0; i<studvals.length; i++)
             stmt.executeUpdate(s + studvals[i]);
          System.out.println("STUDENT records inserted.");
-
-
          
          s = "create table DEPT(DId int, DName varchar(8))";
          stmt.executeUpdate(s);
@@ -78,6 +76,10 @@ public class CreateStudentDB {
          s = "create table ENROLL(EId int, StudentId int, SectionId int, Grade varchar(2))";
          stmt.executeUpdate(s);
          System.out.println("Table ENROLL created.");
+         
+         s = "create index StudentId on enroll (StudentId)";
+         stmt.executeUpdate(s);
+         System.out.println("Index indexStudentId_Enroll on enroll created.");
 
          s = "insert into ENROLL(EId, StudentId, SectionId, Grade) values ";
          String[] enrollvals = {"(14, 1, 13, 'A')",
