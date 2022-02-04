@@ -14,7 +14,7 @@ public class CreateStudentDB {
          stmt.executeUpdate(s);
          System.out.println("Table STUDENT created.");
          
-         s = "create index MajorId on student (MajorId)";
+         s = "create index MajorId on student (MajorId) using hash";
          stmt.executeUpdate(s);
          System.out.println("Index indexMajorId_Student on student created.");
          
@@ -77,7 +77,7 @@ public class CreateStudentDB {
          stmt.executeUpdate(s);
          System.out.println("Table ENROLL created.");
          
-         s = "create index StudentId on enroll (StudentId)";
+         s = "create index StudentId on enroll (StudentId) using hash";
          stmt.executeUpdate(s);
          System.out.println("Index indexStudentId_Enroll on enroll created.");
 
