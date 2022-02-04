@@ -3,7 +3,7 @@ import java.sql.*;
 import java.util.Scanner;
 import simpledb.jdbc.embedded.EmbeddedDriver;
 import simpledb.jdbc.network.NetworkDriver;
-
+// path to connect jdbc:simpledb:studentdb
 public class SimpleIJ {
    public static void main(String[] args) {
 
