@@ -64,6 +64,17 @@ public class Parser {
          lex.eatKeyword("where");
          pred = predicate();
       }
+      
+      
+      if (lex.matchKeyword("order")) {
+    	lex.eatKeyword("order");
+    	if (lex.matchKeyword("by")) {
+    		lex.eatKeyword("by");
+    	}
+    	else {
+    	}
+      }
+      
       return new QueryData(fields, tables, pred);
    }
    

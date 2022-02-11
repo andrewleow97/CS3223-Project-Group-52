@@ -47,9 +47,6 @@ public class BasicQueryPlanner implements QueryPlanner {
       //Step 4: Project on the field names
       p = new ProjectPlan(p, data.fields());
       
-      //Create new plan node
-      p = new SortPlan(tx, p, data.fields());
-      
       return p;
    }
 }

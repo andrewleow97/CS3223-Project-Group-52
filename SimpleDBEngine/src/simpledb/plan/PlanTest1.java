@@ -11,7 +11,7 @@ public class PlanTest1 {
 	    Transaction tx = db.newTx();
 	    Planner planner = db.planner();
 	    
-	    String qry = "select majorid, sname from student";
+	    String qry = "select sname, majorid from student";
 	    Plan p = planner.createQueryPlan(qry, tx);
 	    Scan s = p.open();
 	    while (s.next())
@@ -20,6 +20,5 @@ public class PlanTest1 {
 	    s.close();
 	    tx.commit();
 	}
-
 }
 
