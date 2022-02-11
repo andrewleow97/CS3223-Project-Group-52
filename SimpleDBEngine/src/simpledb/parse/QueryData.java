@@ -12,7 +12,8 @@ public class QueryData {
    private List<String> fields;
    private Collection<String> tables;
    private Predicate pred;
-   private List<List<String>> sortFields;
+   private List<String> sortFields;
+   private List<String> sortOrder;
    
    
    /**
@@ -22,6 +23,7 @@ public class QueryData {
 	      this.fields = fields;
 	      this.tables = tables;
 	      this.pred = pred;
+	      this.sortFields = null;
 	   }
    
    /**
@@ -31,7 +33,9 @@ public class QueryData {
       this.fields = fields;
       this.tables = tables;
       this.pred = pred;
-      this.sortFields = sortFields;
+      this.sortFields = sortFields.get(0);
+      this.sortOrder = sortFields.get(1);
+      
    }
    
    
@@ -60,8 +64,12 @@ public class QueryData {
       return pred;
    }
    
-   public List<List<String>> sortFields() {
+   public List<String> sortFields() {
 	   return sortFields;
+   }
+   
+   public List<String> sortOrder() {
+	   return sortOrder;
    }
    
    public String toString() {
@@ -76,16 +84,17 @@ public class QueryData {
       String predstring = pred.toString();
       if (!predstring.equals(""))
          result += " where " + predstring;
-      if (!sortFields.isEmpty()) {
-    	  result += "order by ";
-    	  for (List<String> i : sortFields) { //majorid, asc
-    		  for (String j : i) {
-    			  result += j + " ";
-    		  }
-    		  result += ", ";
-    	  }
-    		  
-      }
+//      if (sortFields != null) {
+//       if (!sortFields.isEmpty()) {
+//    	  result += "order by ";
+//    	  for (List<String> i : sortFields) { //majorid, asc
+//    		  for (String j : i) {
+//    			  result += j + " ";
+//    		  }
+//    		  result += ", ";
+//    	  }
+//       }	  
+//      }
     	  
       return result;
    }

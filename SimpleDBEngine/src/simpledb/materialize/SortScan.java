@@ -71,7 +71,7 @@ public class SortScan implements Scan {
       if (!hasmore1 && !hasmore2)
          return false;
       else if (hasmore1 && hasmore2) {
-         if (comp.compare(s1, s2) < 0)
+         if (comp.compare(s1, s2) < 0) //here add if statement
             currentscan = s1;
          else
             currentscan = s2;

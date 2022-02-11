@@ -46,11 +46,15 @@ public class HeuristicQueryPlanner implements QueryPlanner {
          else  // no applicable join
             currentplan = getLowestProductPlan(currentplan);
       }
-      
-      currentplan = new SortPlan(tx, currentplan, data.fields());
-      
+     
       // Step 4.  Project on the field names and return
-      return new ProjectPlan(currentplan, data.fields());
+      currentplan = new ProjectPlan(currentplan, data.fields());
+      if (data.sortFields() == null || data.sortFields().isEmpty()) {
+    	  return currentplan;
+      }
+      // Step 5. Sort the final plan node    
+      return new SortPlan(tx, currentplan, data.sortFields(), data.sortOrder());
+      
    }
    
    private Plan getLowestSelectPlan() {

@@ -22,12 +22,19 @@ public class SortPlan implements Plan {
     * @param sortfields the fields to sort by
     * @param tx the calling transaction
     */
-   public SortPlan(Transaction tx, Plan p, List<String> sortfields) {
+   public SortPlan(Transaction tx, Plan p, List<String> sortfields) { // sortfields = [fldname, order]
       this.tx = tx;
       this.p = p;
       sch = p.schema();
       comp = new RecordComparator(sortfields);
    }
+   
+   public SortPlan(Transaction tx, Plan p, List<String> sortfields, List<String> order) { // sortfields = [fldname, order]
+	      this.tx = tx;
+	      this.p = p;
+	      sch = p.schema();
+	      comp = new RecordComparator(sortfields, order);
+	   }
    
    /**
     * This method is where most of the action is.
@@ -95,7 +102,7 @@ public class SortPlan implements Plan {
       temps.add(currenttemp);
       UpdateScan currentscan = currenttemp.open();
       while (copy(src, currentscan))
-         if (comp.compare(src, currentscan) < 0) {
+         if (comp.compare(src, currentscan) < 0) { // determined by order
          // start a new run
          currentscan.close();
          currenttemp = new TempTable(tx, sch);

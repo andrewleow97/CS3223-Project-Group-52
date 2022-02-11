@@ -54,6 +54,7 @@ public class Parser {
 // Methods for parsing queries
    
    public QueryData query() throws BadSyntaxException{
+	   List<List<String>> sortFields = null;
       lex.eatKeyword("select");
       List<String> fields = selectList();
       lex.eatKeyword("from");
@@ -69,7 +70,8 @@ public class Parser {
     	lex.eatKeyword("order");
     	if (lex.matchKeyword("by")) {
     		lex.eatKeyword("by");
-    		List<List<String>> sortFields = sortList();
+    		sortFields = sortList();
+    		return new QueryData(fields, tables, pred, sortFields);
     	}
       }
       
@@ -109,10 +111,10 @@ public class Parser {
 		   order = "asc";
 	   }
 	   
-	   List<String> temp = new ArrayList<String>();
-	   temp.add(id);
-	   temp.add(order);
-	   L.add(temp);
+	   List<String> fieldList = new ArrayList<String>();
+	   List<String> orderList = new ArrayList<String>();
+	   fieldList.add(id);
+	   orderList.add(order);
 	   
 	   while (lex.matchDelim(',')) {
 		    lex.eatDelim(',');
@@ -125,12 +127,13 @@ public class Parser {
 		  		   lex.eatKeyword("asc");
 		  		   order = "asc";
 		  	   }
+		  
+		  	   fieldList.add(id);
+		  	   orderList.add(order);
 		  	   
-		  	   temp = new ArrayList<String>();
-		  	   temp.add(id);
-		  	   temp.add(order);
-		  	   L.add(temp);
       }
+	   L.add(fieldList);
+	   L.add(orderList);
 	   return L;
    }
    

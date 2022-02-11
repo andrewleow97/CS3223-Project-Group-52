@@ -10,7 +10,8 @@ import simpledb.query.*;
  */
 public class RecordComparator implements Comparator<Scan> {
    private List<String> fields;
-   
+   private List<String> sortFields;
+   private List<String> sortOrder;
    /**
     * Create a comparator using the specified fields,
     * using the ordering implied by its iterator.
@@ -18,6 +19,12 @@ public class RecordComparator implements Comparator<Scan> {
     */
    public RecordComparator(List<String> fields) {
       this.fields = fields;
+   }
+   
+   
+   public RecordComparator(List<String> sortFields, List<String> sortOrder) {
+	      this.sortFields = sortFields;
+	      this.sortOrder = sortOrder;
    }
    
    /**
@@ -33,13 +40,29 @@ public class RecordComparator implements Comparator<Scan> {
     * @return the result of comparing each scan's current record according to the field list
     */
    public int compare(Scan s1, Scan s2) {
-      for (String fldname : fields) {
-         Constant val1 = s1.getVal(fldname); //fldname[0]
-         Constant val2 = s2.getVal(fldname);
-         int result = val1.compareTo(val2);
-         if (result != 0)
-            return result;
-      }
+	   if (this.sortOrder != null) {
+		   for (int i = 0; i < sortFields.size(); i++) {
+			   Constant val1 = s1.getVal(sortFields.get(i));
+			   Constant val2 = s2.getVal(sortFields.get(i));
+			   int result = val1.compareTo(val2);
+			   if (result != 0) {
+				   if (sortOrder.get(i) == "desc") {
+				   result *= -1;
+				   }
+			   return result;
+			   }
+		   }
+	   return 0;
+	  } else {
+	      for (String fldname : fields) { 
+	         Constant val1 = s1.getVal(fldname); 
+	         Constant val2 = s2.getVal(fldname);
+
+	         int result = val1.compareTo(val2);
+	         if (result != 0)
+	            return result;
+	      }
       return 0;
+	  }
    }
 }
