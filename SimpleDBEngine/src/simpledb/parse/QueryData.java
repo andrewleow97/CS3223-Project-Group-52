@@ -12,15 +12,28 @@ public class QueryData {
    private List<String> fields;
    private Collection<String> tables;
    private Predicate pred;
+   private List<List<String>> sortFields;
+   
    
    /**
     * Saves the field and table list and predicate.
     */
    public QueryData(List<String> fields, Collection<String> tables, Predicate pred) {
+	      this.fields = fields;
+	      this.tables = tables;
+	      this.pred = pred;
+	   }
+   
+   /**
+    * Saves the field and table list and predicate with sorting.
+    */
+   public QueryData(List<String> fields, Collection<String> tables, Predicate pred, List<List<String>> sortFields) {
       this.fields = fields;
       this.tables = tables;
       this.pred = pred;
+      this.sortFields = sortFields;
    }
+   
    
    /**
     * Returns the fields mentioned in the select clause.
@@ -47,6 +60,10 @@ public class QueryData {
       return pred;
    }
    
+   public List<List<String>> sortFields() {
+	   return sortFields;
+   }
+   
    public String toString() {
       String result = "select ";
       for (String fldname : fields)
@@ -59,6 +76,17 @@ public class QueryData {
       String predstring = pred.toString();
       if (!predstring.equals(""))
          result += " where " + predstring;
+      if (!sortFields.isEmpty()) {
+    	  result += "order by ";
+    	  for (List<String> i : sortFields) { //majorid, asc
+    		  for (String j : i) {
+    			  result += j + " ";
+    		  }
+    		  result += ", ";
+    	  }
+    		  
+      }
+    	  
       return result;
    }
 }

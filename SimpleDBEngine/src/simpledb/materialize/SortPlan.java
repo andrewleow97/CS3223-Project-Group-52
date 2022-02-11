@@ -127,7 +127,7 @@ public class SortPlan implements Plan {
       boolean hasmore1 = src1.next();
       boolean hasmore2 = src2.next();
       while (hasmore1 && hasmore2)
-         if (comp.compare(src1, src2) < 0)
+         if (comp.compare(src1, src2) < 0) // change this to compare based on asc/desc
          hasmore1 = copy(src1, dest);
       else
          hasmore2 = copy(src2, dest);

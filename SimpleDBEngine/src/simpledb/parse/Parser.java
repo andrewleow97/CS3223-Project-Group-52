@@ -1,7 +1,6 @@
 package simpledb.parse;
 
 import java.util.*;
-
 import simpledb.query.*;
 import simpledb.record.*;
 
@@ -54,7 +53,7 @@ public class Parser {
    
 // Methods for parsing queries
    
-   public QueryData query() {
+   public QueryData query() throws BadSyntaxException{
       lex.eatKeyword("select");
       List<String> fields = selectList();
       lex.eatKeyword("from");
@@ -70,8 +69,7 @@ public class Parser {
     	lex.eatKeyword("order");
     	if (lex.matchKeyword("by")) {
     		lex.eatKeyword("by");
-    	}
-    	else {
+    		List<List<String>> sortFields = sortList();
     	}
       }
       
@@ -97,6 +95,46 @@ public class Parser {
       }
       return L;
    }
+   
+   private List<List<String>> sortList() {
+	   List<List<String>> L = new ArrayList<List<String>>();
+	   
+	   String id = field();
+	   String order = "asc";
+	   if (lex.matchKeyword("desc")) { //gradyear desc,
+		   lex.eatKeyword("desc");
+		   order = "desc";
+	   } else if (lex.matchKeyword("asc")) { //gradyear asc,
+		   lex.eatKeyword("asc");
+		   order = "asc";
+	   }
+	   
+	   List<String> temp = new ArrayList<String>();
+	   temp.add(id);
+	   temp.add(order);
+	   L.add(temp);
+	   
+	   while (lex.matchDelim(',')) {
+		    lex.eatDelim(',');
+	        id = field();
+	  	   	order = "asc";
+		  	   if (lex.matchKeyword("desc")) { //gradyear desc,
+		  		   lex.eatKeyword("desc");
+		  		   order = "desc";
+		  	   } else if (lex.matchKeyword("asc")) { //gradyear asc,
+		  		   lex.eatKeyword("asc");
+		  		   order = "asc";
+		  	   }
+		  	   
+		  	   temp = new ArrayList<String>();
+		  	   temp.add(id);
+		  	   temp.add(order);
+		  	   L.add(temp);
+      }
+	   return L;
+   }
+   
+
    
 // Methods for parsing the various update commands
    
