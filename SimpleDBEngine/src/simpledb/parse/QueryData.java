@@ -84,17 +84,13 @@ public class QueryData {
       String predstring = pred.toString();
       if (!predstring.equals(""))
          result += " where " + predstring;
-//      if (sortFields != null) {
-//       if (!sortFields.isEmpty()) {
-//    	  result += "order by ";
-//    	  for (List<String> i : sortFields) { //majorid, asc
-//    		  for (String j : i) {
-//    			  result += j + " ";
-//    		  }
-//    		  result += ", ";
-//    	  }
-//       }	  
-//      }
+      if (sortFields != null) {
+    	  result += "order by ";
+    	  for (int i = 0; i < sortFields.size(); i++) {
+    		  result += sortFields.get(i) + " ";
+    		  result += sortOrder.get(i) + ",";
+    	  }
+      }
     	  
       return result;
    }

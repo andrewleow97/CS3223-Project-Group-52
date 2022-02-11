@@ -68,11 +68,9 @@ public class Parser {
       
       if (lex.matchKeyword("order")) {
     	lex.eatKeyword("order");
-    	if (lex.matchKeyword("by")) {
-    		lex.eatKeyword("by");
-    		sortFields = sortList();
-    		return new QueryData(fields, tables, pred, sortFields);
-    	}
+		lex.eatKeyword("by");
+		sortFields = sortList();
+		return new QueryData(fields, tables, pred, sortFields);
       }
       
       return new QueryData(fields, tables, pred);
