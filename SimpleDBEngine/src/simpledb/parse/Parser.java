@@ -96,15 +96,20 @@ public class Parser {
       return L;
    }
    
+   /**
+    * Method to parse out sorting clauses proceeding the order by keyword
+    * While commas exist it will keep looking for more fields to add into the two temporary lists 
+    * @return The list of list of strings containing the fields and order to be sorted in
+    */
    private List<List<String>> sortList() {
 	   List<List<String>> L = new ArrayList<List<String>>();
 	   
 	   String id = field();
 	   String order = "asc";
-	   if (lex.matchKeyword("desc")) { //gradyear desc,
+	   if (lex.matchKeyword("desc")) {
 		   lex.eatKeyword("desc");
 		   order = "desc";
-	   } else if (lex.matchKeyword("asc")) { //gradyear asc,
+	   } else if (lex.matchKeyword("asc")) {
 		   lex.eatKeyword("asc");
 		   order = "asc";
 	   }
@@ -114,14 +119,15 @@ public class Parser {
 	   fieldList.add(id);
 	   orderList.add(order);
 	   
+	   // while there are subsequent order by fields
 	   while (lex.matchDelim(',')) {
 		    lex.eatDelim(',');
 	        id = field();
 	  	   	order = "asc";
-		  	   if (lex.matchKeyword("desc")) { //gradyear desc,
+		  	   if (lex.matchKeyword("desc")) { 
 		  		   lex.eatKeyword("desc");
 		  		   order = "desc";
-		  	   } else if (lex.matchKeyword("asc")) { //gradyear asc,
+		  	   } else if (lex.matchKeyword("asc")) {
 		  		   lex.eatKeyword("asc");
 		  		   order = "asc";
 		  	   }

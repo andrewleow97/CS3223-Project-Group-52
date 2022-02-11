@@ -22,13 +22,20 @@ public class SortPlan implements Plan {
     * @param sortfields the fields to sort by
     * @param tx the calling transaction
     */
-   public SortPlan(Transaction tx, Plan p, List<String> sortfields) { // sortfields = [fldname, order]
+   public SortPlan(Transaction tx, Plan p, List<String> sortfields) {
       this.tx = tx;
       this.p = p;
       sch = p.schema();
       comp = new RecordComparator(sortfields);
    }
    
+   /**
+    * Create a sort plan for the specified query.
+    * @param p the plan for the underlying query
+    * @param sortfields the fields to sort by
+    * @param order the order to sort the fields by
+    * @param tx the calling transaction
+    */
    public SortPlan(Transaction tx, Plan p, List<String> sortfields, List<String> order) { // sortfields = [fldname, order]
 	      this.tx = tx;
 	      this.p = p;
@@ -102,7 +109,7 @@ public class SortPlan implements Plan {
       temps.add(currenttemp);
       UpdateScan currentscan = currenttemp.open();
       while (copy(src, currentscan))
-         if (comp.compare(src, currentscan) < 0) { // determined by order
+         if (comp.compare(src, currentscan) < 0) {
          // start a new run
          currentscan.close();
          currenttemp = new TempTable(tx, sch);
@@ -134,7 +141,7 @@ public class SortPlan implements Plan {
       boolean hasmore1 = src1.next();
       boolean hasmore2 = src2.next();
       while (hasmore1 && hasmore2)
-         if (comp.compare(src1, src2) < 0) // change this to compare based on asc/desc
+         if (comp.compare(src1, src2) < 0)
          hasmore1 = copy(src1, dest);
       else
          hasmore2 = copy(src2, dest);

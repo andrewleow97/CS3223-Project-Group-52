@@ -49,6 +49,8 @@ public class HeuristicQueryPlanner implements QueryPlanner {
      
       // Step 4.  Project on the field names and return
       currentplan = new ProjectPlan(currentplan, data.fields());
+      
+      // If no sorting is specified
       if (data.sortFields() == null || data.sortFields().isEmpty()) {
     	  return currentplan;
       }

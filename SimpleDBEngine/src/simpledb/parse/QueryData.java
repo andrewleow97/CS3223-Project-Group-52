@@ -64,10 +64,20 @@ public class QueryData {
       return pred;
    }
    
+   /**
+    * Returns the list of field namess the output should be sorted
+    * according to
+    * @return the list of field names
+    */
    public List<String> sortFields() {
 	   return sortFields;
    }
    
+   /**
+    * Returns the list of order directions the respective fields should be sorted
+    * according to
+    * @return the list of order directions
+    */
    public List<String> sortOrder() {
 	   return sortOrder;
    }
@@ -88,8 +98,9 @@ public class QueryData {
     	  result += "order by ";
     	  for (int i = 0; i < sortFields.size(); i++) {
     		  result += sortFields.get(i) + " ";
-    		  result += sortOrder.get(i) + ",";
+    		  result += sortOrder.get(i) + ", ";
     	  }
+    	  result = result.substring(0, result.length()-2); //remove final comma
       }
     	  
       return result;
