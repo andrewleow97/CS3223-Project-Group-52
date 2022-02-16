@@ -141,17 +141,36 @@ class TablePlanner {
         // tx, p1 = current, p2 = myplan, fldname1, fldname2
 	   	String fldname1 = mypred.terms.get(0).LHS();
 	   	String fldname2 = mypred.terms.get(0).RHS();
-        Plan p = new MergeJoinPlan(tx, current, myplan, fldname1, fldname2);
-        p = addSelectPred(p);
-        return addJoinPred(p, currsch); 
+	   	
+	   	if (currsch.hasField(fldname1)) {
+	   		Plan p = new MergeJoinPlan(tx, current, myplan, fldname1, fldname2);
+	   	
+	        p = addSelectPred(p);
+	        return addJoinPred(p, currsch); 
+	   	} 
+//	   	else if (currsch.hasField(fldname2)) {
+//	   		Plan p = new MergeJoinPlan(tx, current, myplan, fldname2, fldname1);
+//		   	
+//	        p = addSelectPred(p);
+//	        return addJoinPred(p, currsch); 
+//	   	}
+	   	return null;
    }
    
    private Plan makeNestedLoopJoin(Plan current, Schema currsch) {
 	   String fldname1 = mypred.terms.get(0).LHS();
    	   String fldname2 = mypred.terms.get(0).RHS();	
-       Plan p = new NestedLoopPlan(tx, current, myplan, fldname1, fldname2);
-       p = addSelectPred(p);
-       return addJoinPred(p, currsch); 
+   	   if (currsch.hasField(fldname1)) {
+	       Plan p = new NestedLoopPlan(tx, current, myplan, fldname1, fldname2);
+	       p = addSelectPred(p);
+	       return addJoinPred(p, currsch); 
+   	   } 
+//   	   else if (currsch.hasField(fldname2)) {
+//	       Plan p = new NestedLoopPlan(tx, current, myplan, fldname2, fldname1);
+//	       p = addSelectPred(p);
+//	       return addJoinPred(p, currsch); 
+//   	   }
+   	   return null;
   }
 	   
 

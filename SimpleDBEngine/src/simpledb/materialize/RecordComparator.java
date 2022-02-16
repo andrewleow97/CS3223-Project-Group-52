@@ -59,19 +59,10 @@ public class RecordComparator implements Comparator<Scan> {
 		   }
 	   return 0;
 	  } else { // if sorting order is not specified
-	      for (String fldname : fields) {
-	    	  Constant val1 = null;
-	    	  Constant val2 = null;
-	    	 if (s1.hasField(fldname)) {
-	    		 val1 = s1.getVal(fldname); 
-	    	 }
-	    	 if (s2.hasField(fldname)) {
-	    		 val2 = s2.getVal(fldname);
-	    	 }
-	    	 else if (val1 == null || val2 == null) {
-	    		 return 0;
-	    	 }
-	    	 
+
+	      for (String fldname : fields) { 
+	         Constant val1 = s1.getVal(fldname); 
+	         Constant val2 = s2.getVal(fldname);
 	         int result = val1.compareTo(val2);
 	         if (result != 0)
 	            return result;

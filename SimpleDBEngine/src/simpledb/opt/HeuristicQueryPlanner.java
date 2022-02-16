@@ -89,7 +89,6 @@ public class HeuristicQueryPlanner implements QueryPlanner {
          System.out.printf("%s %d\n", "index", indexPlan.recordsOutput());
          System.out.printf("%s %d\n", "sortmerge", sortMergePlan.recordsOutput());
          System.out.printf("%s %d\n", "nestedloop", nestedLoopPlan.recordsOutput());
-         System.out.println(bestplan.blocksAccessed());
          if (bestplan != null)
         	 besttp = tp;
 //         if (indexPlan != null && (bestplan == null || indexPlan.recordsOutput() < bestplan.recordsOutput())) {
@@ -99,11 +98,11 @@ public class HeuristicQueryPlanner implements QueryPlanner {
       }
       if (bestplan != null)
          tableplanners.remove(besttp);
-      try {
-    	  bestplan.open();
-      } catch (Exception e) {
-    	  e.printStackTrace();
-      }
+//      try {
+//    	  bestplan.open();
+//      } catch (Exception e) {
+//    	  e.printStackTrace();
+//      }
       return bestplan;
    }
    
