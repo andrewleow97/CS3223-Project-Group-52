@@ -107,7 +107,6 @@ public class HeuristicQueryPlanner implements QueryPlanner {
    }
    
    private Plan compare(Plan index, Plan sortmerge, Plan nested) {
-	   //blocksaccessed();
 	   int indexblocks = index.blocksAccessed() + index.recordsOutput();
 	   int sortblocks = sortmerge.blocksAccessed() + sortmerge.recordsOutput();
 	   int nestedblocks = nested.blocksAccessed() + nested.recordsOutput();
