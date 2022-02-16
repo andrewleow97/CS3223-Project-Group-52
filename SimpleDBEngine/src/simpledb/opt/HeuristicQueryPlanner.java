@@ -81,7 +81,6 @@ public class HeuristicQueryPlanner implements QueryPlanner {
          Plan sortMergePlan = tp.makeSortMergePlan(current);        
          Plan nestedLoopPlan = tp.makeNestedLoopPlan(current);      
          bestplan = compare(indexPlan, sortMergePlan, nestedLoopPlan);
-         bestplan = sortMergePlan;
          System.out.printf("%s %d\n", "index", indexPlan.blocksAccessed());
          System.out.printf("%s %d\n", "sortmerge", sortMergePlan.blocksAccessed());
          System.out.printf("%s %d\n", "nestedloop", nestedLoopPlan.blocksAccessed());
@@ -89,6 +88,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
          System.out.printf("%s %d\n", "index", indexPlan.recordsOutput());
          System.out.printf("%s %d\n", "sortmerge", sortMergePlan.recordsOutput());
          System.out.printf("%s %d\n", "nestedloop", nestedLoopPlan.recordsOutput());
+         
          if (bestplan != null)
         	 besttp = tp;
 //         if (indexPlan != null && (bestplan == null || indexPlan.recordsOutput() < bestplan.recordsOutput())) {
@@ -108,14 +108,17 @@ public class HeuristicQueryPlanner implements QueryPlanner {
    
    private Plan compare(Plan index, Plan sortmerge, Plan nested) {
 	   //blocksaccessed();
-	   int indexblocks = index.blocksAccessed();
-	   int sortblocks = sortmerge.blocksAccessed();
-	   int nestedblocks = nested.blocksAccessed();
+	   int indexblocks = index.blocksAccessed() + index.recordsOutput();
+	   int sortblocks = sortmerge.blocksAccessed() + sortmerge.recordsOutput();
+	   int nestedblocks = nested.blocksAccessed() + nested.recordsOutput();
 	   if (indexblocks <= sortblocks && indexblocks <= nestedblocks) {
+		   System.out.println("index chosen");
 		   return index;
 	   } else if (sortblocks <= indexblocks && sortblocks <= nestedblocks) {
+		   System.out.println("sortmerge chosen");
 		   return sortmerge;
 	   } else {
+		   System.out.println("nested chosen");
 		   return nested;
 	   }
    }
