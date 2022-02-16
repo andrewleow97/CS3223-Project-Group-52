@@ -61,23 +61,10 @@ public class Parser {
       Collection<String> tables = tableList();
       Predicate pred = new Predicate();
       
-//      while (lex.matchKeyword("join")) { 
-//    	  lex.eatKeyword("join");
-//    	  String joinTable = field();
-//    	  tables.add(joinTable);    	  
-//      }
-//      
-//      if (lex.matchKeyword("on")) { // select sname, majorid from student join enroll on a=b -> a = joinfield 
-//    	  lex.eatKeyword("on");
-//    	  pred = predicate();
-//      }
-      
       if (lex.matchKeyword("where")) {
          lex.eatKeyword("where");
          pred = predicate();
-      }
-      
-      
+      }  
       
       if (lex.matchKeyword("order")) {
     	lex.eatKeyword("order");

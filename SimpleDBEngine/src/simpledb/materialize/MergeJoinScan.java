@@ -24,10 +24,6 @@ public class MergeJoinScan implements Scan {
       this.s2 = s2;
       this.fldname1 = fldname1;
       this.fldname2 = fldname2;
-      
-//      boolean hasmore1 = s1.next();
-//      if (hasmore1)
-//    	  this.joinval = s1.getVal(fldname1);
       beforeFirst();
    }
    

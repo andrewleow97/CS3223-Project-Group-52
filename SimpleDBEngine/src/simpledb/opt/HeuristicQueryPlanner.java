@@ -98,11 +98,6 @@ public class HeuristicQueryPlanner implements QueryPlanner {
       }
       if (bestplan != null)
          tableplanners.remove(besttp);
-//      try {
-//    	  bestplan.open();
-//      } catch (Exception e) {
-//    	  e.printStackTrace();
-//      }
       return bestplan;
    }
    

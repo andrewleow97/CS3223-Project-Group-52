@@ -148,12 +148,7 @@ class TablePlanner {
 	        p = addSelectPred(p);
 	        return addJoinPred(p, currsch); 
 	   	} 
-//	   	else if (currsch.hasField(fldname2)) {
-//	   		Plan p = new MergeJoinPlan(tx, current, myplan, fldname2, fldname1);
-//		   	
-//	        p = addSelectPred(p);
-//	        return addJoinPred(p, currsch); 
-//	   	}
+
 	   	return null;
    }
    
@@ -165,11 +160,7 @@ class TablePlanner {
 	       p = addSelectPred(p);
 	       return addJoinPred(p, currsch); 
    	   } 
-//   	   else if (currsch.hasField(fldname2)) {
-//	       Plan p = new NestedLoopPlan(tx, current, myplan, fldname2, fldname1);
-//	       p = addSelectPred(p);
-//	       return addJoinPred(p, currsch); 
-//   	   }
+
    	   return null;
   }
 	   
