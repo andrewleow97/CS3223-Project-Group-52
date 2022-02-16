@@ -77,15 +77,48 @@ public class HeuristicQueryPlanner implements QueryPlanner {
       TablePlanner besttp = null;
       Plan bestplan = null;
       for (TablePlanner tp : tableplanners) {
-         Plan plan = tp.makeJoinPlan(current);
-         if (plan != null && (bestplan == null || plan.recordsOutput() < bestplan.recordsOutput())) {
-            besttp = tp;
-            bestplan = plan;
-         }
+         Plan indexPlan = tp.makeIndexJoinPlan(current);       
+         Plan sortMergePlan = tp.makeSortMergePlan(current);        
+         Plan nestedLoopPlan = tp.makeNestedLoopPlan(current);      
+         bestplan = compare(indexPlan, sortMergePlan, nestedLoopPlan);
+         bestplan = sortMergePlan;
+         System.out.printf("%s %d\n", "index", indexPlan.blocksAccessed());
+         System.out.printf("%s %d\n", "sortmerge", sortMergePlan.blocksAccessed());
+         System.out.printf("%s %d\n", "nestedloop", nestedLoopPlan.blocksAccessed());
+         
+         System.out.printf("%s %d\n", "index", indexPlan.recordsOutput());
+         System.out.printf("%s %d\n", "sortmerge", sortMergePlan.recordsOutput());
+         System.out.printf("%s %d\n", "nestedloop", nestedLoopPlan.recordsOutput());
+         System.out.println(bestplan.blocksAccessed());
+         if (bestplan != null)
+        	 besttp = tp;
+//         if (indexPlan != null && (bestplan == null || indexPlan.recordsOutput() < bestplan.recordsOutput())) {
+//             besttp = tp;
+//             bestplan = indexPlan;
+//          }
       }
       if (bestplan != null)
          tableplanners.remove(besttp);
+      try {
+    	  bestplan.open();
+      } catch (Exception e) {
+    	  e.printStackTrace();
+      }
       return bestplan;
+   }
+   
+   private Plan compare(Plan index, Plan sortmerge, Plan nested) {
+	   //blocksaccessed();
+	   int indexblocks = index.blocksAccessed();
+	   int sortblocks = sortmerge.blocksAccessed();
+	   int nestedblocks = nested.blocksAccessed();
+	   if (indexblocks <= sortblocks && indexblocks <= nestedblocks) {
+		   return index;
+	   } else if (sortblocks <= indexblocks && sortblocks <= nestedblocks) {
+		   return sortmerge;
+	   } else {
+		   return nested;
+	   }
    }
    
    private Plan getLowestProductPlan(Plan current) {

@@ -141,4 +141,16 @@ public class Term {
    public String toString() {
       return lhs.toString() + opr.toString() + rhs.toString();
    }
+   
+   public String LHS() {
+	   return lhs.toString();
+   }
+   
+   public String RHS() {
+	   return rhs.toString();
+   }
+   
+   public String operator() {
+	   return opr;
+   }
 }

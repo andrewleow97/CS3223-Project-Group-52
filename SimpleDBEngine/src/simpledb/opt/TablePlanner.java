@@ -1,11 +1,15 @@
 package simpledb.opt;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import simpledb.tx.Transaction;
 import simpledb.record.*;
 import simpledb.query.*;
 import simpledb.metadata.*;
 import simpledb.index.planner.*;
+import simpledb.materialize.MergeJoinPlan;
+import simpledb.materialize.NestedLoopPlan;
 import simpledb.multibuffer.MultibufferProductPlan;
 import simpledb.plan.*;
 
@@ -59,12 +63,39 @@ class TablePlanner {
     * @param current the specified plan
     * @return a join plan of the plan and this table
     */
-   public Plan makeJoinPlan(Plan current) {
+   public Plan makeIndexJoinPlan(Plan current) {
       Schema currsch = current.schema();
       Predicate joinpred = mypred.joinSubPred(myschema, currsch);
       if (joinpred == null)
          return null;
-      Plan p = makeIndexJoin(current, currsch);
+      Plan p = makeIndexJoin(current, currsch);      
+      
+      if (p == null)
+         p = makeProductJoin(current, currsch);
+      return p;
+   }
+   
+   
+   public Plan makeSortMergePlan(Plan current) {
+      Schema currsch = current.schema();
+      Predicate joinpred = mypred.joinSubPred(myschema, currsch);
+      if (joinpred == null)
+         return null;
+      Plan p = makeSortMergeJoin(current, currsch);      
+      
+      if (p == null)
+         p = makeProductJoin(current, currsch);
+      return p;
+   }
+   
+   
+   public Plan makeNestedLoopPlan(Plan current) {
+      Schema currsch = current.schema();
+      Predicate joinpred = mypred.joinSubPred(myschema, currsch);
+      if (joinpred == null)
+         return null;
+      Plan p = makeNestedLoopJoin(current, currsch);      
+      
       if (p == null)
          p = makeProductJoin(current, currsch);
       return p;
@@ -105,6 +136,25 @@ class TablePlanner {
       }
       return null;
    }
+   
+   private Plan makeSortMergeJoin(Plan current, Schema currsch) {
+        // tx, p1 = current, p2 = myplan, fldname1, fldname2
+	   	String fldname1 = mypred.terms.get(0).LHS();
+	   	String fldname2 = mypred.terms.get(0).RHS();
+        Plan p = new MergeJoinPlan(tx, current, myplan, fldname1, fldname2);
+        p = addSelectPred(p);
+        return addJoinPred(p, currsch); 
+   }
+   
+   private Plan makeNestedLoopJoin(Plan current, Schema currsch) {
+	   String fldname1 = mypred.terms.get(0).LHS();
+   	   String fldname2 = mypred.terms.get(0).RHS();	
+       Plan p = new NestedLoopPlan(tx, current, myplan, fldname1, fldname2);
+       p = addSelectPred(p);
+       return addJoinPred(p, currsch); 
+  }
+	   
+
    
    private Plan makeProductJoin(Plan current, Schema currsch) {
       Plan p = makeProductPlan(current);

@@ -54,9 +54,8 @@ public class IndexJoinPlan implements Plan {
     * @see simpledb.plan.Plan#blocksAccessed()
     */
    public int blocksAccessed() {
-      return p1.blocksAccessed() 
-         + (p1.recordsOutput() * ii.blocksAccessed())
-         + recordsOutput();
+	// pages of R + pages of R * tuples per page * cost of finding S tuples
+      return p1.blocksAccessed() + (p1.recordsOutput() * ii.blocksAccessed()) + recordsOutput(); 
    }
    
    /**

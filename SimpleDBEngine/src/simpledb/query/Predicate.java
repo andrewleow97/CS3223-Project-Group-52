@@ -11,7 +11,7 @@ import simpledb.record.*;
  *
  */
 public class Predicate {
-   private List<Term> terms = new ArrayList<Term>();
+   public List<Term> terms = new ArrayList<Term>();
 
    /**
     * Create an empty predicate, corresponding to "true".
