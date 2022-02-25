@@ -44,9 +44,98 @@ public class HashJoinPlan implements Plan {
      * @see simpledb.plan.Plan#open()
      */
    public Scan open() {
-      HashMap<Integer, TempTable> s1 = p1.partition();
-      HashMap<Integer, TempTable> s2 = p2.partition(); 
-      return new HashJoinScan(tx, s1, s2, fldname1, fldname2, hashval);
+      HashMap<Integer, TempTable> partition1 = p1.partition(); 
+
+      HashMap<Integer, TempTable> partition2 = p2.partition(); 
+      // 2 hashmap of partitions
+      // join into 1 hashmap of partitions -> scan on this one
+      
+      //s1 hash table for comparison for final output
+      // rehash s1
+      // for temptable in s2
+      	// rehash s2 append into s1
+      	// output s1 temptable if s2 added in else delete
+     // 
+      
+      //record comparator compare function (returns 0 if matching)
+      
+      HashMap<Integer, TempTable> output = new HashJoinScan(tx, partition1, partition2, fldname1, fldname2).next();
+      
+      
+      
+      List<Integer> outputKeys = new ArrayList<>();
+		// rehash s1 into output
+		for (int key : s1.keySet()) { // key = s1/s2 partition k
+			Schema schema = s1.get(key).getLayout().schema();
+			Scan s = s1.get(key).open();
+			s.beforeFirst();
+			int hash = 0;
+			while (s.next()) { // scan of temptable of partition k in s1
+				try {
+					int joinval = s.getInt(fldname1);
+					hash = joinval % hashval;
+
+				} catch (NumberFormatException e) { // not an int
+					String joinval = s.getString(fldname1);
+					hash = ((joinval == null) ? 0 : joinval.hashCode()) % hashval;
+
+				}
+				UpdateScan insert = output.get(hash).open();
+				insert.insert();
+				for (String fldname : schema.fields()) {
+					insert.setVal(fldname, s.getVal(fldname));
+				}
+			}
+			// 1 partition rehashed
+			// check same key in s2 for matching
+			schema = s2.get(key).getLayout().schema();
+			Scan scan2 = s2.get(key).open();
+			scan2.beforeFirst();
+			hash = 0;
+			while (scan2.next()) { // scan of temptable of partition k in s2
+				try {
+					int joinval = s.getInt(fldname1);
+					hash = joinval % hashval;
+				} catch (NumberFormatException e) { // not an int
+					String joinval = s.getString(fldname1);
+					hash = ((joinval == null) ? 0 : joinval.hashCode()) % hashval;
+				}
+		}
+		// s1 3 -> 4, s2 10 -> 4
+		// maintain list of all keys in output in list here
+		for (int key : s2.keySet()) {
+			Schema schema = s2.get(key).getLayout().schema();
+			Scan s = s2.get(key).open();
+			s.beforeFirst();
+			int hash = 0;
+			while (s.next()) {
+				try {
+					int joinval = s.getInt(fldname1);
+					hash = joinval % hashval;
+				} catch (NumberFormatException e) { // not an int
+					String joinval = s.getString(fldname1);
+					hash = ((joinval == null) ? 0 : joinval.hashCode()) % hashval;
+				}
+				if (output.containsKey(hash)) {
+					// insert s2 val
+					UpdateScan insert = output.get(hash).open();
+					insert.insert();
+					for (String fldname : schema.fields()) {
+						insert.setVal(fldname, s.getVal(fldname));
+					}
+					if (!outputKeys.contains(hash)) {
+						outputKeys.add(hash);
+					}
+				}
+			}
+		}
+		// output = all s1 and only matching s2 tuples
+		for (int key : output.keySet()) {
+			if (!outputKeys.contains(key)) {
+				output.remove(key);
+			}
+		}
+		return output; // only matching s1 & s2 temptables according to key
       //returning join
    }
    
