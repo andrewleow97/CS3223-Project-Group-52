@@ -159,11 +159,5 @@ public class HashPartitionPlan implements Plan {
 		return temps;
 	}
 
-	private boolean copy(Scan src, UpdateScan dest) {
-		dest.insert();
-		for (String fldname : sch.fields())
-			dest.setVal(fldname, src.getVal(fldname));
-		return src.next();
-	}
 
 }

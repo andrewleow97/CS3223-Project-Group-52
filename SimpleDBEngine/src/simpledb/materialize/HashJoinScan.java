@@ -22,9 +22,14 @@ public class HashJoinScan implements Scan {
 	private UpdateScan s2;
 	private String fldname1, fldname2;
 	private Transaction tx;
-	private RID savedposition;
-	private int hashjoinval = 0;
+	private List<RID> savedposition;
 	private int hashval = 0;
+	private HashMap<Integer, TempTable> h1;
+	private int keyIndex = 0;
+	private List<Integer> keys;
+	private HashMap<Integer, TempTable> p1;
+	private HashMap<Integer, TempTable> p2;
+	private Schema sch;
 
 	/**
 	 * Create a mergejoin scan for the two underlying sorted scans.
@@ -34,18 +39,52 @@ public class HashJoinScan implements Scan {
 	 * @param fldname1 the LHS join field
 	 * @param fldname2 the RHS join field
 	 */
-	public HashJoinScan(Transaction tx, UpdateScan s1, UpdateScan s2, String fldname1, String fldname2) {
-		this.s1 = s1;
-		this.s2 = s2;
+	public HashJoinScan(Transaction tx, HashMap<Integer, TempTable> p1, HashMap<Integer, TempTable> p2, String fldname1,String fldname2, Schema sch) {
 		this.fldname1 = fldname1;
 		this.fldname2 = fldname2;
 		this.tx = tx;
 		this.hashval = (int) Math.ceil(Math.sqrt(tx.availableBuffs())) - 2;
-		s1.beforeFirst();
-		s2.beforeFirst();
-
+		this.keyIndex = 0;
+		this.keys = new ArrayList<>(p1.keySet());
+		this.sch = sch;
+		this.p1 = p1;
+		this.p2 = p2;
+		rehash();
+		// keyindex++ and remake h1
+		// 
+		
+		//everytime keylist new key, remake hashtable h1
+		
+		
+		// rehashing p1 into h1 by scanning partition p1 and adding its vals to temptables in h1 by new hash
+		
+		beforeFirst();
 	}
+	public void rehash(){ // remakes h1 using current key index
+		int key = this.keys.get(this.keyIndex);
+		int hash1 = 0;
+		TempTable p1 = this.p1.get(key);
+		UpdateScan tempscan = p1.open();
+		tempscan.beforeFirst();
+		while (tempscan.next()) {
+			try {
+				int joinval1 = tempscan.getInt(fldname1);
+				hash1 = joinval1 % hashval;
 
+			} catch (NumberFormatException e) { // not an int
+				String joinval1 = tempscan.getString(fldname1);
+				hash1 = ((joinval1 == null) ? 0 : joinval1.hashCode()) % hashval;
+
+			}
+			UpdateScan currscan = h1.get(hash1).open();
+			currscan.insert();
+			for (String fldname : sch.fields())
+				currscan.setVal(fldname, tempscan.getVal(fldname));
+			currscan.close();
+		}
+		this.s2 = p2.get(key).open();
+		this.keyIndex++;
+	}
 	/**
 	 * Close the scan by closing the two underlying scans.
 	 * 
@@ -64,19 +103,24 @@ public class HashJoinScan implements Scan {
 	 */
 	public void beforeFirst() {
 		s1.beforeFirst();
+		s2.beforeFirst();
 	}
 
 	public void savePosition() {
+		RID rid1 = (s1 == null) ? null : s1.getRid();
 		RID rid2 = (s2 == null) ? null : s2.getRid();
-		savedposition = rid2;
+		savedposition = Arrays.asList(rid1, rid2);
 	}
 
 	/**
 	 * Move the scan to its previously-saved position.
 	 */
 	public void restorePosition() {
-		if (savedposition != null)
-			s2.moveToRid(savedposition);
+		RID rid1 = savedposition.get(0);
+		RID rid2 = savedposition.get(1);
+		s1.moveToRid(rid1);
+		if (rid2 != null)
+			s2.moveToRid(rid2);
 	}
 
 	/**
@@ -92,42 +136,42 @@ public class HashJoinScan implements Scan {
 	 */
 
 	public boolean next() {
-		// ONLY DOING SCANNING, REHASHING OF S2
-		beforeFirst();
-		restorePosition();
+		/**
+		 * 1. TAKE IN ENTIRE REHASHED HASHMAP OF S1 AND SCAN S2 OF PARTITION K OF S2 2.
+		 * FOR EACH VALUE OF S2, REHASH IT, CHECK IF HASH VALUE IN HASHMAP OF S1 3. IF
+		 * MATCH, OPEN SCAN ON HASHMAP(KEY) 4. JOIN BASED ON FLDNAME1 AND FLDNAME2,
+		 * RETURN TRUE + SAVE POSITION IF MATCH ELSE INCREMENT S1.NEXT() 5. WHEN
+		 * S1.NEXT() IS NULL, S2.NEXT() 6. WHEN S2.NEXT() IS NULL RETURN FALSE
+		 */
+		if (savedposition.get(0) != null || savedposition.get(1) != null)
+			restorePosition();
 		boolean hasmore2 = s2.next();
-		if (hasmore2 && s2.getVal(fldname2).equals(hashjoinval))
-	         return true;
-		boolean hasmore1 = s1.next();
-		
-		int hash1 = 0;
+
 		int hash2 = 0;
-		while (hasmore1 && hasmore2) {
-			// hash table = partition of s1 
-			// temp table of new hashtable of s1 (<10, r1>, <10, r2>, r3) (<10, s1>)
+		while (hasmore2) {
 			try {
-				int joinval1 = s1.getInt(fldname1);
-				hash1 = joinval1 % hashval;
 				int joinval2 = s2.getInt(fldname2);
 				hash2 = joinval2 % hashval;
 
 			} catch (NumberFormatException e) { // not an int
-				String joinval1 = s1.getString(fldname1);
-				hash1 = ((joinval1 == null) ? 0 : joinval1.hashCode()) % hashval;
 				String joinval2 = s2.getString(fldname2);
 				hash2 = ((joinval2 == null) ? 0 : joinval2.hashCode()) % hashval;
 
 			}
-
-			if (hash1 == hash2) {
-				// while hasmore1 && hash1 == hash2
-				// pause scan here or smth
-				hashjoinval = hash1;
-				savePosition();
-				return true;
+			if (h1.containsKey(hash2)) {
+				UpdateScan s1 = h1.get(hash2).open();
+				boolean hasmore1 = s1.next();
+				while (hasmore1) {
+					if (s1.getVal(fldname1).compareTo(s2.getVal(fldname2)) == 0) {
+						savePosition();
+						return true;
+					}
+					hasmore1 = s1.next();
+				}
 			}
-
+			hasmore2 = s2.next();
 		}
+		rehash();
 		return false;
 	}
 
