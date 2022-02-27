@@ -42,9 +42,16 @@ public class Predicate {
     * @return true if the predicate is true in the scan
     */
    public boolean isSatisfied(Scan s) {
-      for (Term t : terms)
-         if (!t.isSatisfied(s))
+	   System.out.println("satisfied check");
+      for (Term t : terms) {
+    	  System.out.println(t.toString());
+   
+         if (!t.isSatisfied(s)) {
+        	 System.out.println("test false");
             return false;
+         }
+      }
+      System.out.println("test");
       return true;
    }
 

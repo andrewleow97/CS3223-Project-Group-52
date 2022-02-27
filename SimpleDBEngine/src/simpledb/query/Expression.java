@@ -26,6 +26,7 @@ public class Expression {
     * @return the value of the expression, as a Constant
     */
    public Constant evaluate(Scan s) {
+	   System.out.println("evaluate " + s.getVal(fldname));
       return (val != null) ? val : s.getVal(fldname);
    }
    

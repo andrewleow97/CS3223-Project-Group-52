@@ -63,7 +63,7 @@ public class HashJoinPlan implements Plan {
 	
 //	System.out.println(partition1.keySet().toString());
 	Scan out = new HashJoinScan(tx,partition1,partition2,fldname1,fldname2,sch);
-		
+	System.out.println("out finished");
 	return out;
 	}
 	// 2 hashmap of partitions

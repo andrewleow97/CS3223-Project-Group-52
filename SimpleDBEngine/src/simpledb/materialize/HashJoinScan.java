@@ -45,7 +45,7 @@ public class HashJoinScan implements Scan {
 		this.fldname2 = fldname2;
 		this.tx = tx;
 		this.hashval = tx.availableBuffs();
-		this.keyIndex = 0;
+		this.keyIndex = 2;
 		this.keys = new ArrayList<>(p1.keySet());
 		this.sch = sch;
 		this.p1 = p1;
@@ -55,9 +55,8 @@ public class HashJoinScan implements Scan {
 			TempTable currenttemp = new TempTable(tx, sch);
 			h1.put(i, currenttemp);
 		}
-		System.out.println("initialise h1");
+//		test();
 		rehash();
-		System.out.println("rehashed");
 		// keyindex++ and remake h1
 
 		// everytime keylist new key, remake hashtable h1
@@ -69,16 +68,31 @@ public class HashJoinScan implements Scan {
 //		savePosition();
 	}
 
+	public void test() {
+		for (int key : this.keys) {
+			UpdateScan s1 = this.p1.get(key).open();
+			while (s1.next()) {
+
+				System.out.println(String.valueOf(key) + " " + s1.getVal(fldname1));
+			}
+			s1.close();
+		}
+	}
+
 	public void rehash() { // remakes h1 using current key index
 		int key = this.keys.get(this.keyIndex);
 		int hash1 = 0;
 		TempTable p1 = this.p1.get(key);
-
-		UpdateScan tempscan = p1.open();
-		System.out.println(tempscan.next());
+		System.out.println("here");
+		Scan tempscan = p1.open();
+		// boolean to increment keyindex if tempscan.next is false
+		if (!tempscan.next()) {
+			this.keyIndex++;
+			rehash();
+		}
 		tempscan.beforeFirst();
 		while (tempscan.next()) {
-			System.out.println("tempenxt");
+
 			try {
 				int joinval1 = tempscan.getInt(fldname1);
 				hash1 = joinval1 % hashval;
@@ -88,19 +102,19 @@ public class HashJoinScan implements Scan {
 				hash1 = ((joinval1 == null) ? 0 : joinval1.hashCode()) % hashval;
 
 			}
+			System.out.println("rehash of 1 " + hash1);
 			UpdateScan currscan = h1.get(hash1).open();
+
 			currscan.insert();
-			for (String fldname : sch.fields()) {
+			for (String fldname : p1.getLayout().schema().fields()) {
+//				System.out.println(fldname);
 				currscan.setVal(fldname, tempscan.getVal(fldname));
-				System.out.println(currscan.getVal(fldname));
+				System.out.println("value at p1 " + currscan.getVal(fldname));
 			}
 			currscan.close();
 		}
 		tempscan.close();
 		this.s2 = p2.get(key).open();
-		while (s2.next()) {
-			System.out.println(s2.getVal(fldname2));
-		}
 		this.keyIndex++;
 	}
 
@@ -110,6 +124,7 @@ public class HashJoinScan implements Scan {
 	 * @see simpledb.query.Scan#close()
 	 */
 	public void close() {
+		s1.close();
 		s2.close();
 	}
 
@@ -159,7 +174,8 @@ public class HashJoinScan implements Scan {
 		 * RETURN TRUE + SAVE POSITION IF MATCH ELSE INCREMENT S1.NEXT() 5. WHEN
 		 * S1.NEXT() IS NULL, S2.NEXT() 6. WHEN S2.NEXT() IS NULL RETURN FALSE
 		 */
-		System.out.println("next called");
+
+
 		if (savedposition != null)
 			restorePosition();
 		else
@@ -169,7 +185,7 @@ public class HashJoinScan implements Scan {
 		System.out.println(hasmore2);
 		int hash2 = 0;
 		while (hasmore2) {
-			System.out.println("here");
+			System.out.println("hasmore2");
 			try {
 				int joinval2 = s2.getInt(fldname2);
 				hash2 = joinval2 % hashval;
@@ -181,24 +197,39 @@ public class HashJoinScan implements Scan {
 			}
 			System.out.println(hash2);
 			if (h1.containsKey(hash2)) {
-				UpdateScan s1 = h1.get(hash2).open();
+				this.s1 = h1.get(hash2).open();
 				boolean hasmore1 = s1.next();
 				while (hasmore1) {
+					System.out.println("hasmore1");
 //					System.out.println(s1.getVal(fldname1) + " " + s2.getVal(fldname2));
-					if (s1.getVal(fldname1).compareTo(s2.getVal(fldname2)) == 0) {
+					if (this.s1.getVal(fldname1).compareTo(this.s2.getVal(fldname2)) == 0) {
+						System.out.println(this.s1.getVal(fldname1));
+						System.out.println(this.s2.getVal(fldname2));
+						System.out.println("compare is true");
 						savePosition();
+						System.out.println("save position");
+
+
+						
 //						System.out.println(s1.getVal(fldname1) + " " + s2.getVal(fldname2));
 						return true;
 					}
 					hasmore1 = s1.next();
 				}
 			}
+			this.s1.close();
+			System.out.println("close s1");
 			hasmore2 = s2.next();
 		}
+
 		if (this.keyIndex == this.keys.size() - 1) {
+			s1.close();
+			s2.close();
 			return false;
 		}
 		rehash();
+		s1.close();
+		s2.close();
 		return true;
 	}
 
@@ -209,8 +240,10 @@ public class HashJoinScan implements Scan {
 	 * @see simpledb.query.Scan#getInt(java.lang.String)
 	 */
 	public int getInt(String fldname) {
-
-		return s2.getInt(fldname);
+		if (s1.hasField(fldname))
+			return s1.getInt(fldname);
+		else
+			return s2.getInt(fldname);
 	}
 
 	/**
@@ -220,8 +253,10 @@ public class HashJoinScan implements Scan {
 	 * @see simpledb.query.Scan#getString(java.lang.String)
 	 */
 	public String getString(String fldname) {
-
-		return s2.getString(fldname);
+		if (s1.hasField(fldname))
+			return s1.getString(fldname);
+		else
+			return s2.getString(fldname);
 	}
 
 	/**
@@ -231,9 +266,10 @@ public class HashJoinScan implements Scan {
 	 * @see simpledb.query.Scan#getVal(java.lang.String)
 	 */
 	public Constant getVal(String fldname) {
-
-		return s2.getVal(fldname);
-
+		if (s1.hasField(fldname))
+			return s1.getVal(fldname);
+		else
+			return s2.getVal(fldname);
 	}
 
 	/**
@@ -242,6 +278,6 @@ public class HashJoinScan implements Scan {
 	 * @see simpledb.query.Scan#hasField(java.lang.String)
 	 */
 	public boolean hasField(String fldname) {
-		return s2.hasField(fldname);
+		return s1.hasField(fldname) || s2.hasField(fldname);
 	}
 }
