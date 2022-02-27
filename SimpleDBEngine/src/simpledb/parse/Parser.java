@@ -128,18 +128,56 @@ public class Parser {
 				break;
 			}
 			case "avg": {
-//				aggFields.add(new AvgFn(fldname));
+				aggFields.add(new AvgFn(fldname));
 				break;
 			}
 			}
 
 		} else {
 //		else field
+			
 			L.add(field());
 		}
-		if (lex.matchDelim(',')) {
+		while (lex.matchDelim(',')) {
 			lex.eatDelim(',');
-			L.addAll(selectList());
+			if (lex.matchAggregate()) {
+				String aggFn = lex.eatAggregate();
+				// list of aggregation functions
+
+				lex.eatDelim('(');
+				String fldname = field();
+				if (!L.contains(fldname)) {
+					L.add(fldname);
+				}
+				lex.eatDelim(')');
+				switch (aggFn) {
+				case "min": {
+					aggFields.add(new MinFn(fldname));
+					break;
+				}
+				case "max": {
+					aggFields.add(new MaxFn(fldname));
+					break;
+				}
+				case "sum": {
+					aggFields.add(new SumFn(fldname));
+					break;
+				}
+				case "count": {
+					aggFields.add(new CountFn(fldname));
+					break;
+				}
+				case "avg": {
+					aggFields.add(new AvgFn(fldname));
+					break;
+				}
+				}
+
+			} else {
+//			else field
+				
+				L.add(field());
+			}
 		}
 		return L;
 	}

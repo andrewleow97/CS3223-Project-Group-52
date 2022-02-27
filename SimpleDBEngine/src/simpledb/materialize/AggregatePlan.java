@@ -10,9 +10,8 @@ import simpledb.query.*;
  * The Plan class for the <i>groupby</i> operator.
  * @author Edward Sciore
  */
-public class GroupByPlan implements Plan {
+public class AggregatePlan implements Plan {
    private Plan p;
-   private List<String> groupfields;
    private List<AggregationFn> aggfns;
    private Schema sch = new Schema();
    
@@ -27,14 +26,14 @@ public class GroupByPlan implements Plan {
     * @param aggfns the aggregation functions
     * @param tx the calling transaction
     */
-   public GroupByPlan(Transaction tx, Plan p, List<String> groupfields, List<AggregationFn> aggfns) { // [sname, majorid, gradyear]
-      this.p = new SortPlan(tx, p, groupfields);
-      this.groupfields = groupfields;
+   public AggregatePlan(Transaction tx, Plan p,List<AggregationFn> aggfns, List<String> fields) { 
       this.aggfns = aggfns;
-      for (String fldname : groupfields)
-         sch.add(fldname, p.schema());
-      for (AggregationFn fn : aggfns)
+      this.p = p;
+
+//      this.sch = p.schema();
+      for (AggregationFn fn : aggfns) {
          sch.addIntField(fn.fieldName());
+      }
       System.out.println(sch.fields());
    }
    
@@ -46,7 +45,7 @@ public class GroupByPlan implements Plan {
     */
    public Scan open() {
       Scan s = p.open();
-      return new GroupByScan(s, groupfields, aggfns);
+      return new AggregateScan(s, aggfns, sch.fields());
    }
    
    /**
@@ -69,8 +68,6 @@ public class GroupByPlan implements Plan {
     */
    public int recordsOutput() {
       int numgroups = 1;
-      for (String fldname : groupfields)
-         numgroups *= p.distinctValues(fldname);
       return numgroups;
    }
    

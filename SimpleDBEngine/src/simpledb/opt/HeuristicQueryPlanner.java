@@ -50,6 +50,10 @@ public class HeuristicQueryPlanner implements QueryPlanner {
       // Step 4.  Project on the field names and return
       currentplan = new ProjectPlan(currentplan, data.fields());
       // Step 5. Group by
+      if (data.aggFields() != null && data.groupList() == null && data.aggFields().size()>0) {
+    	  currentplan = new AggregatePlan(tx, currentplan, data.aggFields(), data.fields());
+      }
+      
       if (data.groupList() != null && data.aggFields() != null) {
     	  currentplan = new GroupByPlan(tx, currentplan, data.groupList(), data.aggFields());
       } 
