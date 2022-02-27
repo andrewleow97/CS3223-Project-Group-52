@@ -3,48 +3,57 @@ package simpledb.materialize;
 import simpledb.query.Constant;
 import simpledb.query.Scan;
 
-public class SumFn implements AggregationFn {
+public class AvgFn implements AggregationFn {
 	   private String fldname;
+	   private int count;
 	   private int sum;
 	   
 	   /**
-	    * Create a sum aggregation function for the specified field.
+	    * Create a avg aggregation function for the specified field.
 	    * @param fldname the name of the aggregated field
 	    */
-	   public SumFn(String fldname) {
+	   public AvgFn(String fldname) {
 	      this.fldname = fldname;
-	      sum = 0;
 	   }
 	   
 	   /**
-	    * Start a new max to be the field value in the current record.
+	    * Start a new count and allocate sum to first value.
+	    * Since SimpleDB does not support null values,
+	    * every record will be counted,
+	    * regardless of the field.
+	    * The current count is thus set to 1 and sum is first value.
 	    * @see simpledb.materialize.AggregationFn#processFirst(simpledb.query.Scan)
 	    */
 	   public void processFirst(Scan s) {
+	      count = 1;
 	      sum = s.getInt(fldname);
 	   }
 	   
 	   /**
-	    * Increase SUM value with the current record
+	    * Since SimpleDB does not support null values,
+	    * this method always increments the count, and add to the sum,
+	    * regardless of the field.
 	    * @see simpledb.materialize.AggregationFn#processNext(simpledb.query.Scan)
 	    */
 	   public void processNext(Scan s) {
+	      count++;
 	      sum += s.getInt(fldname);
 	   }
 	   
 	   /**
-	    * Return the field's name, prepended by "sumof".
+	    * Return the field's name, prepended by "avg".
 	    * @see simpledb.materialize.AggregationFn#fieldName()
 	    */
 	   public String fieldName() {
-	      return "sumof" + fldname;
+	      return "avgof" + fldname;
 	   }
 	   
 	   /**
-	    * Return the current sum.
+	    * Return the current avg.
 	    * @see simpledb.materialize.AggregationFn#value()
 	    */
 	   public Constant value() {
-	      return new Constant(sum);
+	      return new Constant(sum/count);
 	   }
-}
+	}
+
