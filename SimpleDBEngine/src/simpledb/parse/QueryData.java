@@ -37,11 +37,13 @@ public class QueryData {
       this.fields = fields;
       this.tables = tables;
       this.pred = pred;
+
       if (sortFields != null) {
+
 	      this.sortFields = sortFields.get(0);
 	      this.sortOrder = sortFields.get(1);
       }
-      if (aggFields != null) {
+      if (aggFields.size() > 0) {
     	  this.aggFields = aggFields;
       }
       if (groupList != null) {

@@ -37,6 +37,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
       
       // Step 2:  Choose the lowest-size plan to begin the join order
       Plan currentplan = getLowestSelectPlan(); 
+
       
       // Step 3:  Repeatedly add a plan to the join order
       while (!tableplanners.isEmpty()) {
@@ -50,6 +51,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
       // Step 4.  Project on the field names and return
       currentplan = new ProjectPlan(currentplan, data.fields());
       // Step 5. Group by
+
       if (data.aggFields() != null && data.groupList() == null && data.aggFields().size()>0) {
     	  currentplan = new AggregatePlan(tx, currentplan, data.aggFields(), data.fields());
       }
@@ -72,6 +74,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
    }
    
    private Plan getLowestSelectPlan() {
+	      System.out.println("here");
       TablePlanner besttp = null;
       Plan bestplan = null;
       for (TablePlanner tp : tableplanners) {
