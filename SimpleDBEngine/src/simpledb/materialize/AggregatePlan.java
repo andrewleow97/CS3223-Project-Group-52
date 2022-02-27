@@ -34,7 +34,6 @@ public class AggregatePlan implements Plan {
       for (AggregationFn fn : aggfns) {
          sch.addIntField(fn.fieldName());
       }
-      System.out.println(sch.fields());
    }
    
    /**

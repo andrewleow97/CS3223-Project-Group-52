@@ -108,7 +108,7 @@ public class Parser {
 
 			lex.eatDelim('(');
 			String fldname = field();
-
+			L.add(fldname);
 			lex.eatDelim(')');
 			switch (aggFn) {
 			case "min": {

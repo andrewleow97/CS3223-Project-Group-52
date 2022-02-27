@@ -74,7 +74,6 @@ public class HeuristicQueryPlanner implements QueryPlanner {
    }
    
    private Plan getLowestSelectPlan() {
-	      System.out.println("here");
       TablePlanner besttp = null;
       Plan bestplan = null;
       for (TablePlanner tp : tableplanners) {
