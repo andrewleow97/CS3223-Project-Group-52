@@ -59,9 +59,9 @@ public class HashJoinPlan implements Plan {
 	HashMap<Integer, TempTable> partition1 = p1.partition();
 
 	HashMap<Integer, TempTable> partition2 = p2.partition();
-	
 
-	System.out.println(partition1.keySet().toString());
+	
+//	System.out.println(partition1.keySet().toString());
 	Scan out = new HashJoinScan(tx,partition1,partition2,fldname1,fldname2,sch);
 		
 	return out;

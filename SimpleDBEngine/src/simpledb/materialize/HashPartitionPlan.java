@@ -32,7 +32,7 @@ public class HashPartitionPlan implements Plan {
 		this.p = p;
 		this.tx = tx;
 		sch.addAll(p.schema());
-		this.k = (int) Math.ceil(Math.sqrt(this.tx.availableBuffs())) - 1;
+		this.k = this.tx.availableBuffs() - 1;
 	}
 
 	/**
@@ -75,8 +75,7 @@ public class HashPartitionPlan implements Plan {
 	 * @see simpledb.plan.Plan#recordsOutput()
 	 */
 	public int recordsOutput() {
-		int maxvals = p.distinctValues(fldname1);
-		return (p.recordsOutput()) / maxvals;
+		return p.distinctValues(fldname1);
 	}
 
 	/**
@@ -114,23 +113,13 @@ public class HashPartitionPlan implements Plan {
 //   
 	private HashMap<Integer, TempTable> splitIntoRuns(Scan src) {
 		HashMap<Integer, TempTable> temps = new HashMap<>();
-		List<TempTable> temptables = new ArrayList<>(k);
 		for (int i = 0; i < k; i++) {
 			TempTable currenttemp = new TempTable(tx, sch);
-			temptables.add(currenttemp);
+			temps.put(i, currenttemp);
 		}
-		src.beforeFirst();
 		if (!src.next())
 			return temps;
 		src.beforeFirst();
-//	      while (copy(src, currentscan)) {
-////	         if (comp.compare(src, currentscan) < 0) {
-//	         // start a new run
-//	         currentscan.close();
-//	         currenttemp = new TempTable(tx, sch);
-//	         temptables.add(currenttemp);
-//	         currentscan = (UpdateScan) currenttemp.open();
-//	      }
 
 		while (src.next()) {
 			int hash = 0;
@@ -143,21 +132,16 @@ public class HashPartitionPlan implements Plan {
 				hash = hashString(joinval);
 
 			}
-			UpdateScan currscan = temptables.get(hash).open();
+			UpdateScan currscan = temps.get(hash).open();
 			currscan.insert();
-			for (String fldname : sch.fields())
+			for (String fldname : sch.fields()) {
 				currscan.setVal(fldname, src.getVal(fldname));
+			}
 			// currentscan is the whole record -> add to temptable in position hash
 			currscan.close();
 
 		}
-		for (TempTable currtemp : temptables) {
-			Constant temphash = currtemp.open().getVal(fldname1);
-			int hash = temphash.hashCode() % k;
-			temps.put(hash, currtemp);
-		}
 		return temps;
 	}
-
 
 }

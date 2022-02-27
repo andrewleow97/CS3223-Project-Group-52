@@ -83,16 +83,15 @@ public class HeuristicQueryPlanner implements QueryPlanner {
          Plan hashJoinPlan = tp.makeHashJoinPlan(current);
 //         bestplan = compare(indexPlan, sortMergePlan, nestedLoopPlan);
          bestplan = hashJoinPlan;
-         System.out.printf("%s %d\n", "index", indexPlan.blocksAccessed());
-         System.out.printf("%s %d\n", "sortmerge", sortMergePlan.blocksAccessed());
-         System.out.printf("%s %d\n", "nestedloop", nestedLoopPlan.blocksAccessed());
-         System.out.printf("%s %d\n", "hashjoin", hashJoinPlan.blocksAccessed());
-         
-         System.out.printf("%s %d\n", "index", indexPlan.recordsOutput());
-         System.out.printf("%s %d\n", "sortmerge", sortMergePlan.recordsOutput());
-         System.out.printf("%s %d\n", "nestedloop", nestedLoopPlan.recordsOutput());
-         System.out.printf("%s %d\n", "hashjoin", hashJoinPlan.recordsOutput());
-         System.out.println(bestplan.equals(null));
+//         System.out.printf("%s %d\n", "index", indexPlan.blocksAccessed());
+//         System.out.printf("%s %d\n", "sortmerge", sortMergePlan.blocksAccessed());
+//         System.out.printf("%s %d\n", "nestedloop", nestedLoopPlan.blocksAccessed());
+//         System.out.printf("%s %d\n", "hashjoin", hashJoinPlan.blocksAccessed());
+//         
+//         System.out.printf("%s %d\n", "index", indexPlan.recordsOutput());
+//         System.out.printf("%s %d\n", "sortmerge", sortMergePlan.recordsOutput());
+//         System.out.printf("%s %d\n", "nestedloop", nestedLoopPlan.recordsOutput());
+//         System.out.printf("%s %d\n", "hashjoin", hashJoinPlan.recordsOutput());
          if (bestplan != null)
         	 besttp = tp;
 //         if (indexPlan != null && (bestplan == null || indexPlan.recordsOutput() < bestplan.recordsOutput())) {

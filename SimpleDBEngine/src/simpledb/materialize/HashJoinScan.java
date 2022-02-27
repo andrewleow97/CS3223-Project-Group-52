@@ -39,36 +39,46 @@ public class HashJoinScan implements Scan {
 	 * @param fldname1 the LHS join field
 	 * @param fldname2 the RHS join field
 	 */
-	public HashJoinScan(Transaction tx, HashMap<Integer, TempTable> p1, HashMap<Integer, TempTable> p2, String fldname1,String fldname2, Schema sch) {
+	public HashJoinScan(Transaction tx, HashMap<Integer, TempTable> p1, HashMap<Integer, TempTable> p2, String fldname1,
+			String fldname2, Schema sch) {
 		this.fldname1 = fldname1;
 		this.fldname2 = fldname2;
 		this.tx = tx;
-		this.hashval = (int) Math.ceil(Math.sqrt(tx.availableBuffs())) - 2;
+		this.hashval = tx.availableBuffs();
 		this.keyIndex = 0;
 		this.keys = new ArrayList<>(p1.keySet());
 		this.sch = sch;
 		this.p1 = p1;
 		this.p2 = p2;
+		h1 = new HashMap<>();
 		for (int i = 0; i < hashval; i++) {
 			TempTable currenttemp = new TempTable(tx, sch);
 			h1.put(i, currenttemp);
 		}
+		System.out.println("initialise h1");
 		rehash();
+		System.out.println("rehashed");
 		// keyindex++ and remake h1
 
-		//everytime keylist new key, remake hashtable h1
-		
-		// rehashing p1 into h1 by scanning partition p1 and adding its vals to temptables in h1 by new hash
-		
+		// everytime keylist new key, remake hashtable h1
+
+		// rehashing p1 into h1 by scanning partition p1 and adding its vals to
+		// temptables in h1 by new hash
+
 		beforeFirst();
+//		savePosition();
 	}
-	public void rehash(){ // remakes h1 using current key index
+
+	public void rehash() { // remakes h1 using current key index
 		int key = this.keys.get(this.keyIndex);
 		int hash1 = 0;
 		TempTable p1 = this.p1.get(key);
+
 		UpdateScan tempscan = p1.open();
+		System.out.println(tempscan.next());
 		tempscan.beforeFirst();
 		while (tempscan.next()) {
+			System.out.println("tempenxt");
 			try {
 				int joinval1 = tempscan.getInt(fldname1);
 				hash1 = joinval1 % hashval;
@@ -80,20 +90,26 @@ public class HashJoinScan implements Scan {
 			}
 			UpdateScan currscan = h1.get(hash1).open();
 			currscan.insert();
-			for (String fldname : sch.fields())
+			for (String fldname : sch.fields()) {
 				currscan.setVal(fldname, tempscan.getVal(fldname));
+				System.out.println(currscan.getVal(fldname));
+			}
 			currscan.close();
 		}
+		tempscan.close();
 		this.s2 = p2.get(key).open();
+		while (s2.next()) {
+			System.out.println(s2.getVal(fldname2));
+		}
 		this.keyIndex++;
 	}
+
 	/**
 	 * Close the scan by closing the two underlying scans.
 	 * 
 	 * @see simpledb.query.Scan#close()
 	 */
 	public void close() {
-		s1.close();
 		s2.close();
 	}
 
@@ -104,23 +120,21 @@ public class HashJoinScan implements Scan {
 	 * @see simpledb.query.Scan#beforeFirst()
 	 */
 	public void beforeFirst() {
-		s1.beforeFirst();
 		s2.beforeFirst();
 	}
 
 	public void savePosition() {
-		RID rid1 = (s1 == null) ? null : s1.getRid();
+
 		RID rid2 = (s2 == null) ? null : s2.getRid();
-		savedposition = Arrays.asList(rid1, rid2);
+		savedposition = Arrays.asList(rid2);
 	}
 
 	/**
 	 * Move the scan to its previously-saved position.
 	 */
 	public void restorePosition() {
-		RID rid1 = savedposition.get(0);
-		RID rid2 = savedposition.get(1);
-		s1.moveToRid(rid1);
+
+		RID rid2 = savedposition.get(0);
 		if (rid2 != null)
 			s2.moveToRid(rid2);
 	}
@@ -145,12 +159,17 @@ public class HashJoinScan implements Scan {
 		 * RETURN TRUE + SAVE POSITION IF MATCH ELSE INCREMENT S1.NEXT() 5. WHEN
 		 * S1.NEXT() IS NULL, S2.NEXT() 6. WHEN S2.NEXT() IS NULL RETURN FALSE
 		 */
-		if (savedposition.get(0) != null || savedposition.get(1) != null)
+		System.out.println("next called");
+		if (savedposition != null)
 			restorePosition();
-		boolean hasmore2 = s2.next();
+		else
+			s2.beforeFirst();
 
+		boolean hasmore2 = s2.next();
+		System.out.println(hasmore2);
 		int hash2 = 0;
 		while (hasmore2) {
+			System.out.println("here");
 			try {
 				int joinval2 = s2.getInt(fldname2);
 				hash2 = joinval2 % hashval;
@@ -160,14 +179,15 @@ public class HashJoinScan implements Scan {
 				hash2 = ((joinval2 == null) ? 0 : joinval2.hashCode()) % hashval;
 
 			}
+			System.out.println(hash2);
 			if (h1.containsKey(hash2)) {
 				UpdateScan s1 = h1.get(hash2).open();
 				boolean hasmore1 = s1.next();
 				while (hasmore1) {
-					System.out.println(s1.getVal(fldname1) + " " + s2.getVal(fldname2));
+//					System.out.println(s1.getVal(fldname1) + " " + s2.getVal(fldname2));
 					if (s1.getVal(fldname1).compareTo(s2.getVal(fldname2)) == 0) {
 						savePosition();
-						System.out.println(s1.getVal(fldname1) + " " + s2.getVal(fldname2));
+//						System.out.println(s1.getVal(fldname1) + " " + s2.getVal(fldname2));
 						return true;
 					}
 					hasmore1 = s1.next();
@@ -175,8 +195,11 @@ public class HashJoinScan implements Scan {
 			}
 			hasmore2 = s2.next();
 		}
+		if (this.keyIndex == this.keys.size() - 1) {
+			return false;
+		}
 		rehash();
-		return false;
+		return true;
 	}
 
 	/**
@@ -186,10 +209,8 @@ public class HashJoinScan implements Scan {
 	 * @see simpledb.query.Scan#getInt(java.lang.String)
 	 */
 	public int getInt(String fldname) {
-		if (s1.hasField(fldname))
-			return s1.getInt(fldname);
-		else
-			return s2.getInt(fldname);
+
+		return s2.getInt(fldname);
 	}
 
 	/**
@@ -199,10 +220,8 @@ public class HashJoinScan implements Scan {
 	 * @see simpledb.query.Scan#getString(java.lang.String)
 	 */
 	public String getString(String fldname) {
-		if (s1.hasField(fldname))
-			return s1.getString(fldname);
-		else
-			return s2.getString(fldname);
+
+		return s2.getString(fldname);
 	}
 
 	/**
@@ -212,10 +231,9 @@ public class HashJoinScan implements Scan {
 	 * @see simpledb.query.Scan#getVal(java.lang.String)
 	 */
 	public Constant getVal(String fldname) {
-		if (s1.hasField(fldname))
-			return s1.getVal(fldname);
-		else
-			return s2.getVal(fldname);
+
+		return s2.getVal(fldname);
+
 	}
 
 	/**
@@ -224,6 +242,6 @@ public class HashJoinScan implements Scan {
 	 * @see simpledb.query.Scan#hasField(java.lang.String)
 	 */
 	public boolean hasField(String fldname) {
-		return s1.hasField(fldname) || s2.hasField(fldname);
+		return s2.hasField(fldname);
 	}
 }
