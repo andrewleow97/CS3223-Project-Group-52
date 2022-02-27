@@ -49,24 +49,17 @@ public class HeuristicQueryPlanner implements QueryPlanner {
      
       // Step 4.  Project on the field names and return
       currentplan = new ProjectPlan(currentplan, data.fields());
+      // Step 5. Group by
+      if (data.groupList() != null && data.aggFields() != null) {
+    	  currentplan = new GroupByPlan(tx, currentplan, data.groupList(), data.aggFields());
+      } 
       
       // If no sorting is specified
       if (data.sortFields() == null || data.sortFields().isEmpty()) {
     	  return currentplan;
       }
       
-//      // Aggregate
-//      if (data.aggFns() == null || data.aggFields() == null) {
-//    	  return currentplan;
-//      } else {
-//    	  
-//      }
-      
-      // Step 5. Group by
-      if (data.groupList() != null && data.aggFields() != null) {
-    	  currentplan = new GroupByPlan(tx, currentplan, data.groupList(), data.aggFields());
-      } 
-      
+
       // Step 6. Sort the final plan node   
       return new SortPlan(tx, currentplan, data.sortFields(), data.sortOrder());
        
