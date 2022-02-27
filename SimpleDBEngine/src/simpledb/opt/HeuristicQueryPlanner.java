@@ -36,7 +36,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
       }
       
       // Step 2:  Choose the lowest-size plan to begin the join order
-      Plan currentplan = getLowestSelectPlan();
+      Plan currentplan = getLowestSelectPlan(); 
       
       // Step 3:  Repeatedly add a plan to the join order
       while (!tableplanners.isEmpty()) {
@@ -54,8 +54,23 @@ public class HeuristicQueryPlanner implements QueryPlanner {
       if (data.sortFields() == null || data.sortFields().isEmpty()) {
     	  return currentplan;
       }
-      // Step 5. Sort the final plan node    
+      
+//      // Aggregate
+//      if (data.aggFns() == null || data.aggFields() == null) {
+//    	  return currentplan;
+//      } else {
+//    	  
+//      }
+      
+      // Step 5. Group by
+      if (data.groupList() != null && data.aggFields() != null) {
+    	  currentplan = new GroupByPlan(tx, currentplan, data.groupList(), data.aggFields());
+      } 
+      
+      // Step 6. Sort the final plan node   
       return new SortPlan(tx, currentplan, data.sortFields(), data.sortOrder());
+       
+      
       
    }
    
@@ -119,6 +134,8 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		   return nested;
 	   }
    }
+   
+
    
    private Plan getLowestProductPlan(Plan current) {
       TablePlanner besttp = null;

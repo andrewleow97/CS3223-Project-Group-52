@@ -3,7 +3,7 @@ package simpledb.materialize;
 import simpledb.query.Constant;
 import simpledb.query.Scan;
 
-public class SUMFn implements AggregationFn {
+public class SumFn implements AggregationFn {
 	   private String fldname;
 	   private int sum;
 	   
@@ -11,7 +11,7 @@ public class SUMFn implements AggregationFn {
 	    * Create a sum aggregation function for the specified field.
 	    * @param fldname the name of the aggregated field
 	    */
-	   public SUMFn(String fldname) {
+	   public SumFn(String fldname) {
 	      this.fldname = fldname;
 	      sum = 0;
 	   }
