@@ -63,9 +63,18 @@ public class Parser {
 		List<String> groupList = null;
 		lex.eatKeyword("select");
 
+		boolean isDistinct = false;
+		if(lex.matchKeyword("distinct")) {
+			lex.eatKeyword("distinct");
+			isDistinct = true;
+		}
+		
 		List<String> fields = selectList();
 //select field1, agg(field2), field3 from smth
+		
 
+		
+		
 		lex.eatKeyword("from");
 		Collection<String> tables = tableList();
 		Predicate pred = new Predicate();
@@ -87,7 +96,7 @@ public class Parser {
 			sortFields = sortList();
 		}
 
-		return new QueryData(fields, tables, pred, sortFields, aggFields, groupList);
+		return new QueryData(fields, tables, pred, sortFields, aggFields, groupList, isDistinct);
 	}
 
 	private List<String> selectList() {
@@ -99,7 +108,7 @@ public class Parser {
 
 			lex.eatDelim('(');
 			String fldname = field();
-			L.add(fldname);
+
 			lex.eatDelim(')');
 			switch (aggFn) {
 			case "min": {
