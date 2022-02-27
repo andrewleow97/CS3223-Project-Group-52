@@ -49,12 +49,14 @@ public class HashJoinScan implements Scan {
 		this.sch = sch;
 		this.p1 = p1;
 		this.p2 = p2;
+		for (int i = 0; i < hashval; i++) {
+			TempTable currenttemp = new TempTable(tx, sch);
+			h1.put(i, currenttemp);
+		}
 		rehash();
 		// keyindex++ and remake h1
-		// 
-		
+
 		//everytime keylist new key, remake hashtable h1
-		
 		
 		// rehashing p1 into h1 by scanning partition p1 and adding its vals to temptables in h1 by new hash
 		
@@ -162,8 +164,10 @@ public class HashJoinScan implements Scan {
 				UpdateScan s1 = h1.get(hash2).open();
 				boolean hasmore1 = s1.next();
 				while (hasmore1) {
+					System.out.println(s1.getVal(fldname1) + " " + s2.getVal(fldname2));
 					if (s1.getVal(fldname1).compareTo(s2.getVal(fldname2)) == 0) {
 						savePosition();
+						System.out.println(s1.getVal(fldname1) + " " + s2.getVal(fldname2));
 						return true;
 					}
 					hasmore1 = s1.next();
