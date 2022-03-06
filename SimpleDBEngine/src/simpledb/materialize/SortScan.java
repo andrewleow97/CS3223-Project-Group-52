@@ -148,4 +148,7 @@ public class SortScan implements Scan {
       if (rid2 != null)
          s2.moveToRid(rid2);
    }
+   public Constant getValue(String fldname) {
+	      return s1.getVal(fldname);
+	   }
 }

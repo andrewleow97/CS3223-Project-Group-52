@@ -50,6 +50,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
      
       // Step 4.  Project on the field names and return
       currentplan = new ProjectPlan(currentplan, data.fields());
+      
       // Step 5. Group by
 
       if (data.aggFields() != null && data.groupList() == null && data.aggFields().size()>0) {
@@ -60,21 +61,35 @@ public class HeuristicQueryPlanner implements QueryPlanner {
     	  currentplan = new GroupByPlan(tx, currentplan, data.groupList(), data.aggFields());
       } 
       
-      if (data.isDistinct() != false) {
-    	  // sort plan first
-    	  currentplan = new SortPlan(tx, currentplan, data.fields()); 
-    	  // eliminate duplicates
-    	  currentplan = new DistinctPlan(tx, currentplan, data.fields()); 
+      
+
+      // Step 6. Sort the final plan node w/ distinct support   
+      if (data.sortFields() == null || data.sortFields().isEmpty()) {
+          if (data.isDistinct() != false) {
+            // sort plan first
+            currentplan = new SortPlan(tx, currentplan, data.fields()); 
+            // eliminate duplicates
+            currentplan = new DistinctPlan(tx, currentplan, data.fields()); 
+          }
+        return currentplan;
       }
       
-      // If no sorting is specified
-      if (data.sortFields() == null || data.sortFields().isEmpty()) {
-    	  return currentplan;
+      else {
+    	// sort plan first
+        currentplan = new SortPlan(tx, currentplan, data.sortFields(), data.sortOrder());
+          if (data.isDistinct() != false) {
+            
+            // eliminate duplicates
+            return new DistinctPlan(tx, currentplan, data.fields()); 
+          }
+          else {
+        	  // just return, no duplicate elimination
+            return currentplan;
+          }
       }
       
 
-      // Step 6. Sort the final plan node   
-      return new SortPlan(tx, currentplan, data.sortFields(), data.sortOrder());
+
        
       
       

@@ -44,7 +44,6 @@ public class DistinctPlan implements Plan {
 	 */
 	public Scan open() {
 		Scan s = p.open();
-		System.out.println(p.getClass());
 		return new DistinctScan(s, comp, fields);
 	}
 
