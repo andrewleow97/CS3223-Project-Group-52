@@ -36,6 +36,7 @@ public class HashJoinPlan implements Plan {
 		this.tx = tx;
 		sch.addAll(p1.schema());
 		sch.addAll(p2.schema());
+//		System.out.println(sch.fields());
 	}
 
 	/**
@@ -59,11 +60,25 @@ public class HashJoinPlan implements Plan {
 	HashMap<Integer, TempTable> partition1 = p1.partition();
 
 	HashMap<Integer, TempTable> partition2 = p2.partition();
-
+	
+//	for (int key : partition2.keySet()) {
+//		UpdateScan temp = partition2.get(key).open();
+//		temp.beforeFirst();
+//		boolean hasmore = temp.next();
+//		while (hasmore) {
+//			for (String fldname : partition2.get(key).getLayout().schema().fields()) {
+//
+//				System.out.println("value at h2 " + temp.getVal(fldname) + " hashed into " + key);
+//					            }
+//			hasmore = temp.next();
+//		}
+//		temp.close();
+//	}
+	
 	
 //	System.out.println(partition1.keySet().toString());
 	Scan out = new HashJoinScan(tx,partition1,partition2,fldname1,fldname2,sch);
-	System.out.println("out finished");
+//	System.out.println("out finished");
 	return out;
 	}
 	// 2 hashmap of partitions
