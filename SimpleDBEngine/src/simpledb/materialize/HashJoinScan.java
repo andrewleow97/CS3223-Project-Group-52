@@ -83,7 +83,6 @@ public class HashJoinScan implements Scan {
 		int key = this.keys.get(this.keyIndex);
 		int hash1 = 0;
 		TempTable p1 = this.p1.get(key);
-		System.out.println("here");
 		Scan tempscan = p1.open();
 		// boolean to increment keyindex if tempscan.next is false
 		if (!tempscan.next()) {
