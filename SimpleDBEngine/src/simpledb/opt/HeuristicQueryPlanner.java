@@ -60,6 +60,13 @@ public class HeuristicQueryPlanner implements QueryPlanner {
     	  currentplan = new GroupByPlan(tx, currentplan, data.groupList(), data.aggFields());
       } 
       
+      if (data.isDistinct() != false) {
+    	  // sort plan first
+    	  currentplan = new SortPlan(tx, currentplan, data.fields()); 
+    	  // eliminate duplicates
+    	  currentplan = new DistinctPlan(tx, currentplan, data.fields()); 
+      }
+      
       // If no sorting is specified
       if (data.sortFields() == null || data.sortFields().isEmpty()) {
     	  return currentplan;
@@ -122,6 +129,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 	   int indexblocks = index.blocksAccessed() + index.recordsOutput();
 	   int sortblocks = sortmerge.blocksAccessed() + sortmerge.recordsOutput();
 	   int nestedblocks = nested.blocksAccessed() + nested.recordsOutput();
+	   //int hashblocks = hash.blocksAccessed();
 	   if (indexblocks <= sortblocks && indexblocks <= nestedblocks) {
 		   System.out.println("index chosen");
 		   return index;
