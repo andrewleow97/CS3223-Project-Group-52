@@ -48,9 +48,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		}
 
 		// Step 2: Choose the lowest-size plan to begin the join order
-		Plan currentplan = getLowestSelectPlan();
-		
-		
+		Plan currentplan = getLowestSelectPlan();		
 		
 		for (Term term : data.pred().terms) {
 			if (term.compareField()) {
@@ -214,6 +212,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			}
 			else {
 				bestplan = nestedLoopPlan;
+
 			}
 			if (bestplan != null)
 				besttp = tp;
@@ -224,10 +223,16 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 	}
 
 	private Plan compare(Plan index, Plan sortmerge, Plan nested, Plan hash) {
-		int indexblocks = index.blocksAccessed() + index.recordsOutput();
-		int sortblocks = sortmerge.blocksAccessed() + sortmerge.recordsOutput();
-		int nestedblocks = nested.blocksAccessed() + nested.recordsOutput();
-		int hashblocks = hash.blocksAccessed() + hash.recordsOutput();
+		int indexblocks = Integer.MAX_VALUE, sortblocks = Integer.MAX_VALUE, nestedblocks = Integer.MAX_VALUE, hashblocks = Integer.MAX_VALUE;
+		if (index != null)
+			indexblocks = index.blocksAccessed() + index.recordsOutput();
+		if (sortmerge != null) {
+			sortblocks = sortmerge.blocksAccessed() + sortmerge.recordsOutput();
+		}
+		if (nested != null)
+			nestedblocks = nested.blocksAccessed() + nested.recordsOutput();
+		if (hash != null)
+			hashblocks = hash.blocksAccessed() + hash.recordsOutput();
 		List<Integer> lowestJoinBlocks = new ArrayList<>(Arrays.asList(indexblocks, sortblocks, nestedblocks, hashblocks));
 		List<Plan> lowestJoinPlan = new ArrayList<>(Arrays.asList(index, sortmerge, nested, hash));
 		int lowestIndex = lowestJoinBlocks.indexOf(Collections.min(lowestJoinBlocks));

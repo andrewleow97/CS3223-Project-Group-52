@@ -95,11 +95,13 @@ public class Predicate {
       Schema newsch = new Schema();
       newsch.addAll(sch1);
       newsch.addAll(sch2);
-      for (Term t : terms)
+      for (Term t : terms) {
          if (!t.appliesTo(sch1)  &&
                !t.appliesTo(sch2) &&
                t.appliesTo(newsch))
             result.terms.add(t);
+      }
+
       if (result.terms.size() == 0)
          return null;
       else

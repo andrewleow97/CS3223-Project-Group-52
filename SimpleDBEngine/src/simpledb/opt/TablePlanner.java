@@ -96,6 +96,7 @@ class TablePlanner {
 	public Plan makeNestedLoopPlan(Plan current) {
 		Schema currsch = current.schema();
 		Predicate joinpred = mypred.joinSubPred(myschema, currsch);
+
 		if (joinpred == null)
 			return null;
 		Plan p = makeNestedLoopJoin(current, currsch);
@@ -194,11 +195,11 @@ class TablePlanner {
 			p = addSelectPred(p);
 			return addJoinPred(p, currsch);
 		} else if (currsch.hasField(fldname2)) {
+			
 			Plan p = new NestedLoopPlan(tx, myplan, current, fldname1, fldname2, opr);
 			p = addSelectPred(p);
 			return addJoinPred(p, currsch);
 		}
-
 		return null;
 	}
 
