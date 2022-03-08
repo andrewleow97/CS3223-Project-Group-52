@@ -47,9 +47,9 @@ public class Term {
       case ">=":
     	  return lhsval.compareTo(rhsval) > 0 || lhsval.compareTo(rhsval) == 0;
       case "!=":
-    	  return !(lhsval.compareTo(rhsval) != 0);
+    	  return lhsval.compareTo(rhsval) != 0;
       case "<>":
-    	  return !(lhsval.compareTo(rhsval) != 0);
+    	  return lhsval.compareTo(rhsval) != 0;
 	  default:
 		  return false;  
     	  

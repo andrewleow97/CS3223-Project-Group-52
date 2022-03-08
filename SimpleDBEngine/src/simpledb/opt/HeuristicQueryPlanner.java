@@ -117,7 +117,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			Plan nestedLoopPlan = tp.makeNestedLoopPlan(current);
 			Plan hashJoinPlan = tp.makeHashJoinPlan(current);
 //         bestplan = compare(indexPlan, sortMergePlan, nestedLoopPlan);
-			bestplan = hashJoinPlan;
+			bestplan = compare(indexPlan, sortMergePlan, nestedLoopPlan, hashJoinPlan);
 //			bestplan = sortMergePlan;
 //         System.out.printf("%s %d\n", "index", indexPlan.blocksAccessed());
 //         System.out.printf("%s %d\n", "sortmerge", sortMergePlan.blocksAccessed());
@@ -140,21 +140,18 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		return bestplan;
 	}
 
-	private Plan compare(Plan index, Plan sortmerge, Plan nested) {
+	private Plan compare(Plan index, Plan sortmerge, Plan nested, Plan hash) {
 		int indexblocks = index.blocksAccessed() + index.recordsOutput();
 		int sortblocks = sortmerge.blocksAccessed() + sortmerge.recordsOutput();
 		int nestedblocks = nested.blocksAccessed() + nested.recordsOutput();
+		int hashblocks = hash.blocksAccessed() + hash.recordsOutput();
 		// int hashblocks = hash.blocksAccessed();
-		if (indexblocks <= sortblocks && indexblocks <= nestedblocks) {
-			System.out.println("index chosen");
-			return index;
-		} else if (sortblocks <= indexblocks && sortblocks <= nestedblocks) {
-			System.out.println("sortmerge chosen");
-			return sortmerge;
-		} else {
-			System.out.println("nested chosen");
-			return nested;
-		}
+		List<Integer> lowestJoinBlocks = new ArrayList<>(Arrays.asList(indexblocks, sortblocks, nestedblocks, hashblocks));
+		System.out.println(lowestJoinBlocks.toString());
+		List<Plan> lowestJoinPlan = new ArrayList<>(Arrays.asList(index, sortmerge, nested, hash));
+		int lowestIndex = lowestJoinBlocks.indexOf(Collections.min(lowestJoinBlocks));
+		System.out.println("chosen " + lowestIndex);
+		return lowestJoinPlan.get(lowestIndex);
 	}
 
 	private Plan getLowestProductPlan(Plan current) {

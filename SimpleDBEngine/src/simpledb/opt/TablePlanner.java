@@ -73,8 +73,10 @@ class TablePlanner {
 			return null;
 		Plan p = makeIndexJoin(current, currsch);
 
-		if (p == null)
+		if (p == null) {
+			System.out.println("no index");
 			p = makeProductJoin(current, currsch);
+		}
 		return p;
 	}
 
@@ -84,9 +86,11 @@ class TablePlanner {
 		if (joinpred == null)
 			return null;
 		Plan p = makeSortMergeJoin(current, currsch);
-
-		if (p == null)
+		
+		if (p == null){
+			System.out.println("no merge");
 			p = makeProductJoin(current, currsch);
+		}
 		return p;
 	}
 
@@ -97,8 +101,11 @@ class TablePlanner {
 			return null;
 		Plan p = makeNestedLoopJoin(current, currsch);
 
-		if (p == null)
+		if (p == null) {
+			System.out.println("no nestedloop");
 			p = makeProductJoin(current, currsch);
+			}
+			
 		return p;
 	}
 
@@ -109,8 +116,10 @@ class TablePlanner {
 			return null;
 		Plan p = makeHashJoin(current, currsch);
 
-		if (p == null)
+		if (p == null) {
 			p = makeProductJoin(current, currsch);
+			System.out.println("no hash");
+		}
 		return p;
 	}
 
@@ -154,10 +163,13 @@ class TablePlanner {
 		// tx, p1 = current, p2 = myplan, fldname1, fldname2
 		String fldname1 = mypred.terms.get(0).LHS();
 		String fldname2 = mypred.terms.get(0).RHS();
-
 		if (currsch.hasField(fldname1)) {
 			Plan p = new MergeJoinPlan(tx, current, myplan, fldname1, fldname2);
 
+			p = addSelectPred(p);
+			return addJoinPred(p, currsch);
+		} else if (currsch.hasField(fldname2)) {
+			Plan p = new MergeJoinPlan(tx, myplan, current, fldname1, fldname2);
 			p = addSelectPred(p);
 			return addJoinPred(p, currsch);
 		}
@@ -172,6 +184,10 @@ class TablePlanner {
 			Plan p = new NestedLoopPlan(tx, current, myplan, fldname1, fldname2);
 			p = addSelectPred(p);
 			return addJoinPred(p, currsch);
+		} else if (currsch.hasField(fldname2)) {
+			Plan p = new NestedLoopPlan(tx, myplan, current, fldname1, fldname2);
+			p = addSelectPred(p);
+			return addJoinPred(p, currsch);
 		}
 
 		return null;
@@ -184,6 +200,12 @@ class TablePlanner {
 			HashPartitionPlan currpartition = new HashPartitionPlan(tx, current, fldname1);
 			HashPartitionPlan mypartition = new HashPartitionPlan(tx, myplan, fldname2);
 			Plan p = new HashJoinPlan(tx, currpartition, mypartition, fldname1, fldname2);
+			p = addSelectPred(p);
+			return addJoinPred(p, currsch);
+		} else if (currsch.hasField(fldname2)) {
+			HashPartitionPlan currpartition = new HashPartitionPlan(tx, current, fldname2);
+			HashPartitionPlan mypartition = new HashPartitionPlan(tx, myplan, fldname1);
+			Plan p = new HashJoinPlan(tx, currpartition, mypartition, fldname2, fldname1);
 			p = addSelectPred(p);
 			return addJoinPred(p, currsch);
 		}
