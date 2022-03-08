@@ -200,20 +200,24 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 	private Plan getLowestJoinPlan(Plan current) {
 		TablePlanner besttp = null;
 		Plan bestplan = null;
+		
 		for (TablePlanner tp : tableplanners) {
+			
 			// if non-equi join{ bestplan = nestedloopplan}
 			Plan indexPlan = tp.makeIndexJoinPlan(current);
 			Plan sortMergePlan = tp.makeSortMergePlan(current);
 			Plan nestedLoopPlan = tp.makeNestedLoopPlan(current);
 			Plan hashJoinPlan = tp.makeHashJoinPlan(current);
 			// TODO: If all plans are null, default the best plan to product plan.
-			if (tp.mypred.terms.get(0).operator().equals("=")) {
+			if (tp.mypred.terms.size() > 0 && tp.mypred.terms.get(0).operator().equals("=")) {
 				bestplan = compare(indexPlan, sortMergePlan, nestedLoopPlan, hashJoinPlan);
 			}
+			
 			else {
 				bestplan = nestedLoopPlan;
 
 			}
+			
 			if (bestplan != null)
 				besttp = tp;
 		}
@@ -236,7 +240,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		List<Integer> lowestJoinBlocks = new ArrayList<>(Arrays.asList(indexblocks, sortblocks, nestedblocks, hashblocks));
 		List<Plan> lowestJoinPlan = new ArrayList<>(Arrays.asList(index, sortmerge, nested, hash));
 		int lowestIndex = lowestJoinBlocks.indexOf(Collections.min(lowestJoinBlocks));
-//		System.out.println("chosen " + lowestIndex);
+
 		
 		if(lowestIndex == 0) {
 			queryPlan.computeIfAbsent("join", k -> new ArrayList<>()).add("IndexBasedJoin");
