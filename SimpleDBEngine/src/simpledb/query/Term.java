@@ -32,14 +32,9 @@ public class Term {
     * @return true if both expressions have the corresponding value in the scan
     */
    public boolean isSatisfied(Scan s) { 
-	   System.out.println("evaluating");
-	   System.out.println(s.getVal("did").toString() + " " + s.getVal("dname").toString()
-			  );
-	   System.out.println(s.getVal("cid").toString() + " " + s.getVal("title").toString()
-			   + " " + s.getVal("deptid").toString());
+
       Constant lhsval = lhs.evaluate(s);
       Constant rhsval = rhs.evaluate(s);
-      System.out.println("comparing " + lhsval.toString() + " " + rhsval.toString());
       switch(this.opr) {
       case "=":
     	  return lhsval.compareTo(rhsval) == 0;
@@ -52,9 +47,9 @@ public class Term {
       case ">=":
     	  return lhsval.compareTo(rhsval) > 0 || lhsval.compareTo(rhsval) == 0;
       case "!=":
-    	  return !(lhsval.compareTo(rhsval) == 0);
+    	  return !(lhsval.compareTo(rhsval) != 0);
       case "<>":
-    	  return !(lhsval.compareTo(rhsval) == 0);
+    	  return !(lhsval.compareTo(rhsval) != 0);
 	  default:
 		  return false;  
     	  

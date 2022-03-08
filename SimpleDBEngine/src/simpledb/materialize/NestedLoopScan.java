@@ -73,6 +73,8 @@ public class NestedLoopScan implements Scan {
     	  Constant v1 = s1.getVal(fldname1);
     	  while (hasmore2) {
     		  Constant v2 = s2.getVal(fldname2);
+    		  //TODO: non-equi join case for below compareto and joinval
+//    		  case(predicate) if = then ==, if < then compareto < 0, if > then compareto > 0
     		  if (v1.compareTo(v2) == 0) {
     	            joinval = s2.getVal(fldname2);
     		  		return true;
