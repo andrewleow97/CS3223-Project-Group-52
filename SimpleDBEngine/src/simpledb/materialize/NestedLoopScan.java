@@ -131,7 +131,6 @@ public class NestedLoopScan implements Scan {
               }
            }
            s2.beforeFirst();
-           hasmore2 = s2.next();
            hasmore1 = s1.next();
        }
 	   return false;

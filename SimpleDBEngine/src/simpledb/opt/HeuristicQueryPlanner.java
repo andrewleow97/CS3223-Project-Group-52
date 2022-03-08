@@ -38,14 +38,9 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		// Step 2: Choose the lowest-size plan to begin the join order
 		Plan currentplan = getLowestSelectPlan();
 		
-//		for (Term term : data.pred().terms) {
-//			if (term.compareField()) {
-//				System.out.println("both fields");
-//			}
-//			else {
-//				System.out.println("one constant");
-//			}
-//		}
+
+				
+
 			
 		// Step 3: Repeatedly add a plan to the join order
 		while (!tableplanners.isEmpty()) {
@@ -120,20 +115,24 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 	private Plan getLowestJoinPlan(Plan current) {
 		TablePlanner besttp = null;
 		Plan bestplan = null;
+		
 		for (TablePlanner tp : tableplanners) {
+			
 			// if non-equi join{ bestplan = nestedloopplan}
 			Plan indexPlan = tp.makeIndexJoinPlan(current);
 			Plan sortMergePlan = tp.makeSortMergePlan(current);
 			Plan nestedLoopPlan = tp.makeNestedLoopPlan(current);
 			Plan hashJoinPlan = tp.makeHashJoinPlan(current);
-			if (tp.mypred.terms.get(0).operator().equals("=")) {
+			if (tp.mypred.terms.size() > 0 && tp.mypred.terms.get(0).operator().equals("=")) {
 				
 				bestplan = compare(indexPlan, sortMergePlan, nestedLoopPlan, hashJoinPlan);
 			}
+			
 			else {
 				bestplan = nestedLoopPlan;
 
 			}
+			
 			if (bestplan != null)
 				besttp = tp;
 		}
@@ -156,7 +155,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		List<Integer> lowestJoinBlocks = new ArrayList<>(Arrays.asList(indexblocks, sortblocks, nestedblocks, hashblocks));
 		List<Plan> lowestJoinPlan = new ArrayList<>(Arrays.asList(index, sortmerge, nested, hash));
 		int lowestIndex = lowestJoinBlocks.indexOf(Collections.min(lowestJoinBlocks));
-//		System.out.println("chosen " + lowestIndex);
+		System.out.println(lowestIndex);
 		return lowestJoinPlan.get(lowestIndex);
 	}
 
