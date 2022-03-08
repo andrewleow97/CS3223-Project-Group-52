@@ -11,6 +11,7 @@ public class NestedLoopScan implements Scan {
    private Scan s2;
    private String fldname1, fldname2, opr;
    private Constant joinval = null;
+   boolean hasmore1, hasmore2;
    
    /**
     * Create a nestedloop scan for the two underlying sorted scans.
@@ -46,6 +47,8 @@ public class NestedLoopScan implements Scan {
    public void beforeFirst() {
       s1.beforeFirst();
       s2.beforeFirst();
+      hasmore1 = s1.next();
+	  hasmore2 = s2.next();
    }
    
    public boolean joinCondition(Constant v1, Constant v2, String opr) {
@@ -82,35 +85,56 @@ public class NestedLoopScan implements Scan {
     * @see simpledb.query.Scan#next()
     */
    public boolean next() {
-      boolean hasmore2 = s2.next();
-      if (hasmore2 && joinval != null && s2.getVal(fldname2).equals(joinval)) {
-         return true;
-      }
-      
-      boolean hasmore1 = s1.next();
-      if (hasmore1 && joinval != null && s1.getVal(fldname1).equals(joinval)) {
-         return true;
-      }
-      
-      while (hasmore1) {
-    	  Constant v1 = s1.getVal(fldname1);
-    	  while (hasmore2) {
-    		  Constant v2 = s2.getVal(fldname2);
+//      boolean hasmore2 = s2.next();
+//      if (hasmore2 && joinval != null && s2.getVal(fldname2).equals(joinval)) {
+//    	  hasmore2 = s2.next();
+//         return true;
+//      }
+//      
+////      boolean hasmore1 = s1.next();
+//      if (hasmore1 && joinval != null && s1.getVal(fldname1).equals(joinval)) {
+//    	  hasmore1 = s1.next();
+//         return true;
+//      }
+//      
+//      while (hasmore1) {
+//    	  Constant v1 = s1.getVal(fldname1);
+//    	  while (hasmore2) {
+//    		  Constant v2 = s2.getVal(fldname2);
 //    		  System.out.println("val1 " + v1 + " val2 " + v2);
+//    		  if (joinCondition(v1, v2, this.opr)) {
+//    	            joinval = s2.getVal(fldname2);
+//    		  		return true;
+//    		  }
+//    		  else {
+//    			  hasmore2 = s2.next();
+//    		  }
+//    	  }
+//    	  s2.beforeFirst();
+//    	  hasmore2 = s2.next(); // back to first record
+//    	  hasmore1 = s1.next();
+//    	  
+//      }
+//      return false;
+	   
+	   if (!hasmore1 && !hasmore2) {
+		   return false;
+	   }
+	   
+	   while (hasmore1) {
+           Constant v1 = s1.getVal(fldname1);
+           while (hasmore2 = s2.next()) {
+               Constant v2 = s2.getVal(fldname2);
     		  if (joinCondition(v1, v2, this.opr)) {
-    	            joinval = s2.getVal(fldname2);
-    		  		return true;
-    		  }
-    		  else {
-    			  hasmore2 = s2.next();
-    		  }
-    	  }
-    	  s2.beforeFirst();
-    	  hasmore2 = s2.next(); // back to first record
-    	  hasmore1 = s1.next();
-    	  
-      }
-      return false;
+                  return true;
+              } else {
+              }
+           }
+           s2.beforeFirst();
+           hasmore2 = s2.next();
+           hasmore1 = s1.next();
+       }
+	   return false;
    }
    
    /** 

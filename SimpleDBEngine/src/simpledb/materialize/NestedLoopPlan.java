@@ -45,6 +45,7 @@ public class NestedLoopPlan implements Plan {
       Scan s1 = p1.open();
       Scan s2 = p2.open();
       return new NestedLoopScan(s1, s2, fldname1, fldname2, opr);
+      
    }
    
    /**
