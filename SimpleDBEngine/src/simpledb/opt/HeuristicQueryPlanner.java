@@ -155,7 +155,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		List<Integer> lowestJoinBlocks = new ArrayList<>(Arrays.asList(indexblocks, sortblocks, nestedblocks, hashblocks));
 		List<Plan> lowestJoinPlan = new ArrayList<>(Arrays.asList(index, sortmerge, nested, hash));
 		int lowestIndex = lowestJoinBlocks.indexOf(Collections.min(lowestJoinBlocks));
-		System.out.println(lowestIndex);
+//		System.out.println(lowestIndex);
 		return lowestJoinPlan.get(lowestIndex);
 	}
 
