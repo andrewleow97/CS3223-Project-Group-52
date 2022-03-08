@@ -10,6 +10,7 @@ import simpledb.query.Scan;
 import simpledb.query.UpdateScan;
 import simpledb.record.RID;
 import simpledb.record.Schema;
+//import simpledb.record.TableScan;
 import simpledb.tx.Transaction;
 
 /**
@@ -61,24 +62,24 @@ public class HashJoinScan implements Scan {
 		// rehashing p1 into h1 by scanning partition p1 and adding its vals to
 		// temptables in h1 by new hash
 		this.keyIndex = 0;
-		this.s2 = p2.get(this.keyIndex).open(); // starting at bucket 0
+		this.s2 = (UpdateScan) p2.get(this.keyIndex).open(); // starting at bucket 0
 		beforeFirst();
 //		savePosition();
 	}
 
-	public void test() {
-		UpdateScan temp = p2.get(3).open();
-		temp.beforeFirst();
-		boolean hasmore = temp.next();
-		while (hasmore) {
-			for (String fldname : p2.get(3).getLayout().schema().fields()) {
-
-//				System.out.println("value at h2 " + temp.getVal(fldname) + " hashed into 3");
-					            }
-			hasmore = temp.next();
-		}
-		temp.close();
-	}
+//	public void test() {
+//		UpdateScan temp = p2.get(3).open();
+//		temp.beforeFirst();
+//		boolean hasmore = temp.next();
+//		while (hasmore) {
+//			for (String fldname : p2.get(3).getLayout().schema().fields()) {
+//
+////				System.out.println("value at h2 " + temp.getVal(fldname) + " hashed into 3");
+//					            }
+//			hasmore = temp.next();
+//		}
+//		temp.close();
+//	}
 
 //	public void rehash() { // remakes h1 using current key index
 //		if (this.keyIndex > hashval) {
@@ -319,7 +320,7 @@ public class HashJoinScan implements Scan {
 	            this.s2.close();
 //	            System.out.println("starting index " + this.keyIndex);
 		        if (this.keyIndex <= hashval) {
-		        	this.s2 = this.p2.get(this.keyIndex).open();
+		        	this.s2 = (UpdateScan) this.p2.get(this.keyIndex).open();
 		        	this.s2.beforeFirst();
 		        }
 		        this.savedposition = null;
@@ -349,11 +350,14 @@ public class HashJoinScan implements Scan {
 	                }
 	                while (hasmore1) {
 	                    if (this.s1.getVal(fldname1).compareTo(this.s2.getVal(fldname2)) == 0) { // match on joinval
-//	                        
-	                    	System.out.println(this.s1.getVal("did") + " " + this.s1.getVal("dname") + " " 
-	                    			+ this.s2.getVal("cid") + " " 
-	    	                    			+ this.s2.getVal("title") + " " 
-	    	    	                    			+ this.s2.getVal("deptid"));
+//	                        // need to copy in the values
+	                    	for (String field : this.p2.get(this.keyIndex).getLayout().schema().fields()) {
+	                    		this.s1.setVal(field, this.s2.getVal(field));
+	                    	}
+//	                    	System.out.println(this.s1.getVal("did") + " " + this.s1.getVal("dname") + " " 
+//	                    			+ this.s2.getVal("cid") + " " 
+//	    	                    			+ this.s2.getVal("title") + " " 
+//	    	    	                    			+ this.s2.getVal("deptid"));
 	                        savePosition();
 	                        return true;
 	                    }
@@ -368,7 +372,7 @@ public class HashJoinScan implements Scan {
 	        this.keyIndex += 1;
 //	        System.out.println("starting index " + this.keyIndex);
 	        if (this.keyIndex <= hashval) {
-	        	this.s2 = this.p2.get(this.keyIndex).open();
+	        	this.s2 = (UpdateScan) this.p2.get(this.keyIndex).open();
 	        	this.s2.beforeFirst();
 	        	
 	        }

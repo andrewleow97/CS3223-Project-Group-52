@@ -77,8 +77,17 @@ public class HashJoinPlan implements Plan {
 	
 	
 //	System.out.println(partition1.keySet().toString());
-	Scan out = new HashJoinScan(tx,partition1,partition2,fldname1,fldname2,sch);
+	HashJoinScan out = new HashJoinScan(tx,partition1,partition2,fldname1,fldname2,sch);
 //	System.out.println("out finished");
+//	boolean hasmore = out.next();
+//	while (hasmore) {
+//		System.out.println("did " + out.getVal("did"));
+//		System.out.println("dname " + out.getVal("dname"));
+//		System.out.println("cid " + out.getVal("cid"));
+//		System.out.println("title " + out.getVal("title"));
+//		System.out.println("deptid " + out.getVal("deptid"));
+//		hasmore = out.next();
+//	}
 	return out;
 	}
 	// 2 hashmap of partitions

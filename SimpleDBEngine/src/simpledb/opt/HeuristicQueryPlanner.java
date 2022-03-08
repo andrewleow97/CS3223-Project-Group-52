@@ -118,6 +118,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			Plan hashJoinPlan = tp.makeHashJoinPlan(current);
 //         bestplan = compare(indexPlan, sortMergePlan, nestedLoopPlan);
 			bestplan = hashJoinPlan;
+//			bestplan = sortMergePlan;
 //         System.out.printf("%s %d\n", "index", indexPlan.blocksAccessed());
 //         System.out.printf("%s %d\n", "sortmerge", sortMergePlan.blocksAccessed());
 //         System.out.printf("%s %d\n", "nestedloop", nestedLoopPlan.blocksAccessed());
