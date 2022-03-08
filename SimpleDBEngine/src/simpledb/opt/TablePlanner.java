@@ -26,6 +26,7 @@ class TablePlanner {
 	private Schema myschema;
 	private Map<String, IndexInfo> indexes;
 	private Transaction tx;
+	private ArrayList<String> storeIndex = new ArrayList<String>();
 
 	/**
 	 * Creates a new table planner. The specified predicate applies to the entire
@@ -131,17 +132,27 @@ class TablePlanner {
 	}
 
 	private Plan makeIndexSelect() {
+		storeIndex = new ArrayList<String>();
 		for (String fldname : indexes.keySet()) {
 			Constant val = mypred.equatesWithConstant(fldname);
 			if (val != null) {
 				IndexInfo ii = indexes.get(fldname);
+				storeIndex.add(fldname);
+				storeIndex.add(ii.getIndexType());
 				System.out.println("index on " + fldname + " used");
 				return new IndexSelectPlan(myplan, ii, val);
+			} else {
+				storeIndex.add(fldname);
+				storeIndex.add("empty");
 			}
 		}
 		return null;
 	}
 
+	public ArrayList<String> getIndexUsed() {
+		return storeIndex;
+	}
+	
 	private Plan makeIndexJoin(Plan current, Schema currsch) {
 		for (String fldname : indexes.keySet()) {
 			String outerfield = mypred.equatesWithField(fldname);

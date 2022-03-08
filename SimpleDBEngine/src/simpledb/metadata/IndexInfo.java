@@ -24,6 +24,7 @@ public class IndexInfo {
    private StatInfo si;
    private String indexType = "hash";
    
+   
    /**
     * Create an IndexInfo object for the specified index.
     * @param idxname the name of the index
@@ -53,6 +54,10 @@ public class IndexInfo {
 	} else {
 		return new BTreeIndex(tx, idxname, idxLayout);
 	}
+   }
+   
+   public String getIndexType() {
+	   return indexType;
    }
    
    /**
