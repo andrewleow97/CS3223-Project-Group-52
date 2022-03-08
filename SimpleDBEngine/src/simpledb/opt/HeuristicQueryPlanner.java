@@ -6,6 +6,7 @@ import simpledb.metadata.MetadataMgr;
 import simpledb.parse.QueryData;
 import simpledb.plan.*;
 import simpledb.materialize.*;
+import simpledb.query.*;
 
 /**
  * A query planner that optimizes using a heuristic-based algorithm.
@@ -36,7 +37,16 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 
 		// Step 2: Choose the lowest-size plan to begin the join order
 		Plan currentplan = getLowestSelectPlan();
-
+		
+		for (Term term : data.pred().terms) {
+			if (term.compareField()) {
+				System.out.println("both fields");
+			}
+			else {
+				System.out.println("one constant");
+			}
+		}
+			
 		// Step 3: Repeatedly add a plan to the join order
 		while (!tableplanners.isEmpty()) {
 			Plan p = getLowestJoinPlan(currentplan);

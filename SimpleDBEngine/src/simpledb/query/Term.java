@@ -154,4 +154,13 @@ public class Term {
    public String operator() {
 	   return opr;
    }
+   
+   // returns true if both rhs and lhs are fields
+   public boolean compareField() {
+	   if (lhs.isFieldName() && rhs.isFieldName()) {
+		   return true;
+	   }
+	   return false;
+   }
+   
 }
