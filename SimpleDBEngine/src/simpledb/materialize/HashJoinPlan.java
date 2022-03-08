@@ -36,7 +36,6 @@ public class HashJoinPlan implements Plan {
 		this.tx = tx;
 		sch.addAll(p1.schema());
 		sch.addAll(p2.schema());
-//		System.out.println(sch.fields());
 	}
 
 	/**
@@ -54,140 +53,29 @@ public class HashJoinPlan implements Plan {
 		 * 5. OUTPUT SCAN ON FINAL HASHTABLE
 		 */
 	
-		/**
-		 * list of key 
-		 */
+
+	// 2 hashmap of partitions
 	HashMap<Integer, TempTable> partition1 = p1.partition();
 
 	HashMap<Integer, TempTable> partition2 = p2.partition();
-	
-//	for (int key : partition2.keySet()) {
-//		UpdateScan temp = partition2.get(key).open();
-//		temp.beforeFirst();
-//		boolean hasmore = temp.next();
-//		while (hasmore) {
-//			for (String fldname : partition2.get(key).getLayout().schema().fields()) {
-//
-//				System.out.println("value at h2 " + temp.getVal(fldname) + " hashed into " + key);
-//					            }
-//			hasmore = temp.next();
-//		}
-//		temp.close();
-//	}
-	
-	
-//	System.out.println(partition1.keySet().toString());
+
+	// join into 1 hashmap of partitions -> scan on this one
+	// h1 hash table for comparison for final output
+	// rehash s1 into h1
+	// for temptable in s2
+	// rehash s2 copy into s1 if match
+
 	HashJoinScan out = new HashJoinScan(tx,partition1,partition2,fldname1,fldname2,sch);
-//	System.out.println("out finished");
-//	boolean hasmore = out.next();
-//	while (hasmore) {
-//		System.out.println("did " + out.getVal("did"));
-//		System.out.println("dname " + out.getVal("dname"));
-//		System.out.println("cid " + out.getVal("cid"));
-//		System.out.println("title " + out.getVal("title"));
-//		System.out.println("deptid " + out.getVal("deptid"));
-//		hasmore = out.next();
-//	}
+
 	return out;
 	}
-	// 2 hashmap of partitions
-	// join into 1 hashmap of partitions -> scan on this one
-
-	// s1 hash table for comparison for final output
-	// rehash s1
-	// for temptable in s2
-	// rehash s2 append into s1
-	// output s1 temptable if s2 added in else delete
-	//
-
-	// record comparator compare function (returns 0 if matching)
-
-//	;
-//
-//	List<Integer> outputKeys = new ArrayList<>();
-//	// rehash s1 into output
-//	for(
-//	int key:s1.keySet())
-//	{ // key = s1/s2 partition k
-//		Schema schema = s1.get(key).getLayout().schema();
-//		Scan s = s1.get(key).open();
-//		s.beforeFirst();
-//		int hash = 0;
-//		while (s.next()) { // scan of temptable of partition k in s1
-//			try {
-//				int joinval = s.getInt(fldname1);
-//				hash = joinval % hashval;
-//
-//			} catch (NumberFormatException e) { // not an int
-//				String joinval = s.getString(fldname1);
-//				hash = ((joinval == null) ? 0 : joinval.hashCode()) % hashval;
-//
-//			}
-//			UpdateScan insert = output.get(hash).open();
-//			insert.insert();
-//			for (String fldname : schema.fields()) {
-//				insert.setVal(fldname, s.getVal(fldname));
-//			}
-//		}
-//		// 1 partition rehashed
-//		// check same key in s2 for matching
-//		schema = s2.get(key).getLayout().schema();
-//		Scan scan2 = s2.get(key).open();
-//		scan2.beforeFirst();
-//		hash = 0;
-//		while (scan2.next()) { // scan of temptable of partition k in s2
-//			try {
-//				int joinval = s.getInt(fldname1);
-//				hash = joinval % hashval;
-//			} catch (NumberFormatException e) { // not an int
-//				String joinval = s.getString(fldname1);
-//				hash = ((joinval == null) ? 0 : joinval.hashCode()) % hashval;
-//			}
-//		}
-//		// s1 3 -> 4, s2 10 -> 4
-//		// maintain list of all keys in output in list here
-//		for (int key : s2.keySet()) {
-//			Schema schema = s2.get(key).getLayout().schema();
-//			Scan s = s2.get(key).open();
-//			s.beforeFirst();
-//			int hash = 0;
-//			while (s.next()) {
-//				try {
-//					int joinval = s.getInt(fldname1);
-//					hash = joinval % hashval;
-//				} catch (NumberFormatException e) { // not an int
-//					String joinval = s.getString(fldname1);
-//					hash = ((joinval == null) ? 0 : joinval.hashCode()) % hashval;
-//				}
-//				if (output.containsKey(hash)) {
-//					// insert s2 val
-//					UpdateScan insert = output.get(hash).open();
-//					insert.insert();
-//					for (String fldname : schema.fields()) {
-//						insert.setVal(fldname, s.getVal(fldname));
-//					}
-//					if (!outputKeys.contains(hash)) {
-//						outputKeys.add(hash);
-//					}
-//				}
-//			}
-//		}
-//		// output = all s1 and only matching s2 tuples
-//		for (int key : output.keySet()) {
-//			if (!outputKeys.contains(key)) {
-//				output.remove(key);
-//			}
-//		}
-//		return output; // only matching s1 & s2 temptables according to key
-//		// returning join
-//	}
+	
 
 	/**
-	 * Return the number of block acceses required to mergejoin the sorted tables.
-	 * Since a mergejoin can be preformed with a single pass through each table, the
+	 * Return the number of block acceses required to hashjoin the sorted tables.
+	 * Since a hashjoin can be preformed with a single pass through each table, the
 	 * method returns the sum of the block accesses of the materialized sorted
-	 * tables. It does <i>not</i> include the one-time cost of materializing and
-	 * sorting the records.
+	 * tables.
 	 * 
 	 * @see simpledb.plan.Plan#blocksAccessed()
 	 */

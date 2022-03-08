@@ -48,7 +48,6 @@ public class HashJoinScan implements Scan {
 		this.hashval = tx.availableBuffs();
 		this.keyIndex = 0;
 		this.keys = new ArrayList<>(p1.keySet());
-//		System.out.println(hashval);
 		this.sch = sch;
 		this.p1 = p1;
 		this.p2 = p2;
@@ -58,76 +57,13 @@ public class HashJoinScan implements Scan {
 			h1.put(i, currenttemp);
 		}
 		rehash();
-//		test();
 		// rehashing p1 into h1 by scanning partition p1 and adding its vals to
 		// temptables in h1 by new hash
 		this.keyIndex = 0;
 		this.s2 = (UpdateScan) p2.get(this.keyIndex).open(); // starting at bucket 0
 		beforeFirst();
-//		savePosition();
 	}
 
-//	public void test() {
-//		UpdateScan temp = p2.get(3).open();
-//		temp.beforeFirst();
-//		boolean hasmore = temp.next();
-//		while (hasmore) {
-//			for (String fldname : p2.get(3).getLayout().schema().fields()) {
-//
-////				System.out.println("value at h2 " + temp.getVal(fldname) + " hashed into 3");
-//					            }
-//			hasmore = temp.next();
-//		}
-//		temp.close();
-//	}
-
-//	public void rehash() { // remakes h1 using current key index
-//		if (this.keyIndex > hashval) {
-//			System.out.println("more than hashval " + this.keyIndex);
-//			return;
-//		}
-//		System.out.println(this.keyIndex);
-//		int key = this.keys.get(this.keyIndex);
-//		
-//		int hash1 = 0;
-//		TempTable p1 = this.p1.get(key);
-//		Scan tempscan = p1.open();
-//		// boolean to increment keyindex if tempscan.next is false
-//		tempscan.beforeFirst();
-//		if (!tempscan.next()) {
-//			this.keyIndex++;
-//			tempscan.close();
-//			rehash();
-//		}
-//		System.out.println("here");
-//		while (tempscan.next()) {
-//
-//			try {
-//				int joinval1 = tempscan.getInt(fldname1);
-//				hash1 = joinval1 % hashval;
-//
-//			} catch (NumberFormatException e) { // not an int
-//				String joinval1 = tempscan.getString(fldname1);
-//				hash1 = ((joinval1 == null) ? 0 : joinval1.hashCode()) % hashval;
-//
-//			}
-//			System.out.println("rehash of 1 " + hash1);
-//			UpdateScan currscan = h1.get(hash1).open();
-//
-//			currscan.insert();
-//			for (String fldname : p1.getLayout().schema().fields()) {
-////				System.out.println(fldname);
-//				currscan.setVal(fldname, tempscan.getVal(fldname));
-//				System.out.println("value at p1 " + currscan.getVal(fldname));
-//			}
-//			currscan.close();
-//		}
-//		tempscan.close();
-//		this.s2 = p2.get(key).open();
-//		this.keyIndex++;
-//		
-//		rehash();
-//	}
 	
 	public void rehash() {
 		while (this.keyIndex <= hashval) {
@@ -161,7 +97,6 @@ public class HashJoinScan implements Scan {
 	            currscan.insert();
 	            for (String fldname : p1.getLayout().schema().fields()) {
 	                currscan.setVal(fldname, tempscan.getVal(fldname));
-//	                System.out.println("value at h1 " + currscan.getVal(fldname) + " hashed from " + this.keyIndex + " into " + hash1);
 
 	            }
 	            currscan.close();
@@ -210,7 +145,6 @@ public class HashJoinScan implements Scan {
 		RID rid2 = savedposition.get(1);
 		if (rid2 != null)
 			s2.moveToRid(rid2);
-//		System.out.println("restore position");
 	}
 
 	/**
@@ -224,79 +158,6 @@ public class HashJoinScan implements Scan {
 	 * 
 	 * @see simpledb.query.Scan#next()
 	 */
-
-//	public boolean next() {
-//		/**
-//		 * 1. TAKE IN ENTIRE REHASHED HASHMAP OF S1 AND SCAN S2 OF PARTITION K OF S2 2.
-//		 * FOR EACH VALUE OF S2, REHASH IT, CHECK IF HASH VALUE IN HASHMAP OF S1 3. IF
-//		 * MATCH, OPEN SCAN ON HASHMAP(KEY) 4. JOIN BASED ON FLDNAME1 AND FLDNAME2,
-//		 * RETURN TRUE + SAVE POSITION IF MATCH ELSE INCREMENT S1.NEXT() 5. WHEN
-//		 * S1.NEXT() IS NULL, S2.NEXT() 6. WHEN S2.NEXT() IS NULL RETURN FALSE
-//		 */
-//
-//		
-//		if (savedposition != null)
-//			restorePosition();
-//		else {
-//			s2.beforeFirst();
-//		}
-//		boolean hasmore2 = s2.next();
-//		if (!hasmore2) {
-//        	System.out.println("empty");
-//            this.keyIndex += 1;
-//            this.s2.close();
-//            this.s2 = this.p2.get(keyIndex).open();
-//        }
-//		System.out.println(hasmore2);
-//		int hash2 = 0;
-//		while (hasmore2) {
-//			System.out.println("hasmore2");
-//			try {
-//				int joinval2 = s2.getInt(fldname2);
-//				hash2 = joinval2 % hashval;
-//
-//			} catch (NumberFormatException e) { // not an int
-//				String joinval2 = s2.getString(fldname2);
-//				hash2 = ((joinval2 == null) ? 0 : joinval2.hashCode()) % hashval;
-//
-//			}
-//			System.out.println(hash2);
-//			if (h1.containsKey(hash2)) {
-//				this.s1 = h1.get(hash2).open();
-//				boolean hasmore1 = s1.next();
-//				while (hasmore1) {
-//					System.out.println("hasmore1");
-////					System.out.println(s1.getVal(fldname1) + " " + s2.getVal(fldname2));
-//					if (this.s1.getVal(fldname1).compareTo(this.s2.getVal(fldname2)) == 0) {
-//						System.out.println(this.s1.getVal(fldname1));
-//						System.out.println(this.s2.getVal(fldname2));
-//						System.out.println("compare is true");
-//						savePosition();
-//						System.out.println("save position");
-//
-//
-//						
-////						System.out.println(s1.getVal(fldname1) + " " + s2.getVal(fldname2));
-//						return true;
-//					}
-//					hasmore1 = s1.next();
-//				}
-//			}
-//			this.s1.close();
-//			System.out.println("close s1");
-//			hasmore2 = s2.next();
-//		}
-//
-//		if (this.keyIndex == this.keys.size() - 1) {
-////			s1.close();
-//			s2.close();
-//			return false;
-//		}
-////		s1.close();
-//		s2.close();
-//		return true;
-//	}
-
 	
 	public boolean next() {
 	    /**
@@ -315,10 +176,8 @@ public class HashJoinScan implements Scan {
 	        boolean hasmore2 = this.s2.next();
 	        int hash2 = 0;
 	        if (!hasmore2) {
-//	        	System.out.println(this.keyIndex + " hasmore false");
 	            this.keyIndex += 1;
 	            this.s2.close();
-//	            System.out.println("starting index " + this.keyIndex);
 		        if (this.keyIndex <= hashval) {
 		        	this.s2 = (UpdateScan) this.p2.get(this.keyIndex).open();
 		        	this.s2.beforeFirst();
@@ -337,14 +196,11 @@ public class HashJoinScan implements Scan {
 	    
 	            }
 	            
-//	            System.out.println("hash2 " + hash2);
 	            if (h1.containsKey(hash2)) {
-//	            	System.out.println("i contain hash2 " + hash2);
 	                this.s1 = h1.get(hash2).open();
 	                this.s1.beforeFirst();
 	                boolean hasmore1 = s1.next();
 	                if (!hasmore1) {
-//	                	System.out.println("hasmore1 is empty");
 	                    s1.close();
 	                    continue;
 	                }
@@ -354,10 +210,7 @@ public class HashJoinScan implements Scan {
 	                    	for (String field : this.p2.get(this.keyIndex).getLayout().schema().fields()) {
 	                    		this.s1.setVal(field, this.s2.getVal(field));
 	                    	}
-//	                    	System.out.println(this.s1.getVal("did") + " " + this.s1.getVal("dname") + " " 
-//	                    			+ this.s2.getVal("cid") + " " 
-//	    	                    			+ this.s2.getVal("title") + " " 
-//	    	    	                    			+ this.s2.getVal("deptid"));
+
 	                        savePosition();
 	                        return true;
 	                    }
@@ -370,7 +223,6 @@ public class HashJoinScan implements Scan {
 	        this.s2.close();
 	        this.savedposition = null;
 	        this.keyIndex += 1;
-//	        System.out.println("starting index " + this.keyIndex);
 	        if (this.keyIndex <= hashval) {
 	        	this.s2 = (UpdateScan) this.p2.get(this.keyIndex).open();
 	        	this.s2.beforeFirst();

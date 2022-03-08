@@ -22,7 +22,7 @@ import simpledb.plan.*;
  */
 class TablePlanner {
 	private TablePlan myplan;
-	private Predicate mypred;
+	public Predicate mypred;
 	private Schema myschema;
 	private Map<String, IndexInfo> indexes;
 	private Transaction tx;
@@ -74,7 +74,6 @@ class TablePlanner {
 		Plan p = makeIndexJoin(current, currsch);
 
 		if (p == null) {
-			System.out.println("no index");
 			p = makeProductJoin(current, currsch);
 		}
 		return p;
@@ -88,7 +87,6 @@ class TablePlanner {
 		Plan p = makeSortMergeJoin(current, currsch);
 		
 		if (p == null){
-			System.out.println("no merge");
 			p = makeProductJoin(current, currsch);
 		}
 		return p;
@@ -102,7 +100,6 @@ class TablePlanner {
 		Plan p = makeNestedLoopJoin(current, currsch);
 
 		if (p == null) {
-			System.out.println("no nestedloop");
 			p = makeProductJoin(current, currsch);
 			}
 			
@@ -118,7 +115,6 @@ class TablePlanner {
 
 		if (p == null) {
 			p = makeProductJoin(current, currsch);
-			System.out.println("no hash");
 		}
 		return p;
 	}
@@ -180,12 +176,14 @@ class TablePlanner {
 	private Plan makeNestedLoopJoin(Plan current, Schema currsch) {
 		String fldname1 = mypred.terms.get(0).LHS();
 		String fldname2 = mypred.terms.get(0).RHS();
+		String opr = mypred.terms.get(0).operator();
+		
 		if (currsch.hasField(fldname1)) {
-			Plan p = new NestedLoopPlan(tx, current, myplan, fldname1, fldname2);
+			Plan p = new NestedLoopPlan(tx, current, myplan, fldname1, fldname2, opr);
 			p = addSelectPred(p);
 			return addJoinPred(p, currsch);
 		} else if (currsch.hasField(fldname2)) {
-			Plan p = new NestedLoopPlan(tx, myplan, current, fldname1, fldname2);
+			Plan p = new NestedLoopPlan(tx, myplan, current, fldname1, fldname2, opr);
 			p = addSelectPred(p);
 			return addJoinPred(p, currsch);
 		}

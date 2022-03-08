@@ -13,7 +13,7 @@ import java.util.*;
  */
 public class NestedLoopPlan implements Plan {
    private Plan p1, p2;
-   private String fldname1, fldname2;
+   private String fldname1, fldname2, opr;
    private Schema sch = new Schema();
    
    /**
@@ -26,11 +26,12 @@ public class NestedLoopPlan implements Plan {
     * @param fldname2 the RHS join field
     * @param tx the calling transaction
     */
-   public NestedLoopPlan(Transaction tx, Plan p1, Plan p2, String fldname1, String fldname2) {
+   public NestedLoopPlan(Transaction tx, Plan p1, Plan p2, String fldname1, String fldname2, String opr) {
       this.fldname1 = fldname1;
       this.fldname2 = fldname2;
       this.p1 = p1;
       this.p2 = p2;
+      this.opr = opr;
       sch.addAll(p1.schema());
       sch.addAll(p2.schema());
    }
@@ -43,7 +44,7 @@ public class NestedLoopPlan implements Plan {
    public Scan open() {
       Scan s1 = p1.open();
       Scan s2 = p2.open();
-      return new NestedLoopScan(s1, s2, fldname1, fldname2);
+      return new NestedLoopScan(s1, s2, fldname1, fldname2, opr);
    }
    
    /**

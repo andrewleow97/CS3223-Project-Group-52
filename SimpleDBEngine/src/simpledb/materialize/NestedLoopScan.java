@@ -9,7 +9,7 @@ import simpledb.query.*;
 public class NestedLoopScan implements Scan {
    private Scan s1;
    private Scan s2;
-   private String fldname1, fldname2;
+   private String fldname1, fldname2, opr;
    private Constant joinval = null;
    
    /**
@@ -19,11 +19,12 @@ public class NestedLoopScan implements Scan {
     * @param fldname1 the LHS join field
     * @param fldname2 the RHS join field
     */
-   public NestedLoopScan(Scan s1, Scan s2, String fldname1, String fldname2) {
+   public NestedLoopScan(Scan s1, Scan s2, String fldname1, String fldname2, String opr) {
       this.s1 = s1;
       this.s2 = s2;
       this.fldname1 = fldname1;
       this.fldname2 = fldname2;
+      this.opr = opr;
       beforeFirst();
    }
    
@@ -47,6 +48,27 @@ public class NestedLoopScan implements Scan {
       s2.beforeFirst();
    }
    
+   public boolean joinCondition(Constant v1, Constant v2, String opr) {
+	   switch(this.opr) {
+	      case "=":
+	    	  return v1.compareTo(v2) == 0;
+	      case "<":
+	    	  return v1.compareTo(v2) < 0;
+	      case "<=":
+	    	  return v1.compareTo(v2) < 0 || v1.compareTo(v2) == 0;
+	      case ">":
+	    	  return v1.compareTo(v2) > 0;
+	      case ">=":
+	    	  return v1.compareTo(v2) > 0 || v1.compareTo(v2) == 0;
+	      case "!=":
+	    	  return v1.compareTo(v2) != 0;
+	      case "<>":
+	    	  return v1.compareTo(v2) != 0;
+		  default:
+			  return false; 
+	   }
+   }
+   
    /**
     * Move to the next record.  This is where the action is.
     * <P>
@@ -61,8 +83,9 @@ public class NestedLoopScan implements Scan {
     */
    public boolean next() {
       boolean hasmore2 = s2.next();
-      if (hasmore2 && joinval != null && s2.getVal(fldname2).equals(joinval))
+      if (hasmore2 && joinval != null && s2.getVal(fldname2).equals(joinval)) {
          return true;
+      }
       
       boolean hasmore1 = s1.next();
       if (hasmore1 && joinval != null && s1.getVal(fldname1).equals(joinval)) {
@@ -73,9 +96,8 @@ public class NestedLoopScan implements Scan {
     	  Constant v1 = s1.getVal(fldname1);
     	  while (hasmore2) {
     		  Constant v2 = s2.getVal(fldname2);
-    		  //TODO: non-equi join case for below compareto and joinval
-//    		  case(predicate) if = then ==, if < then compareto < 0, if > then compareto > 0
-    		  if (v1.compareTo(v2) == 0) {
+//    		  System.out.println("val1 " + v1 + " val2 " + v2);
+    		  if (joinCondition(v1, v2, this.opr)) {
     	            joinval = s2.getVal(fldname2);
     		  		return true;
     		  }

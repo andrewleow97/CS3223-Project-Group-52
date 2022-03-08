@@ -116,24 +116,15 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			Plan sortMergePlan = tp.makeSortMergePlan(current);
 			Plan nestedLoopPlan = tp.makeNestedLoopPlan(current);
 			Plan hashJoinPlan = tp.makeHashJoinPlan(current);
-//         bestplan = compare(indexPlan, sortMergePlan, nestedLoopPlan);
-			bestplan = compare(indexPlan, sortMergePlan, nestedLoopPlan, hashJoinPlan);
-//			bestplan = sortMergePlan;
-//         System.out.printf("%s %d\n", "index", indexPlan.blocksAccessed());
-//         System.out.printf("%s %d\n", "sortmerge", sortMergePlan.blocksAccessed());
-//         System.out.printf("%s %d\n", "nestedloop", nestedLoopPlan.blocksAccessed());
-//         System.out.printf("%s %d\n", "hashjoin", hashJoinPlan.blocksAccessed());
-//         
-//         System.out.printf("%s %d\n", "index", indexPlan.recordsOutput());
-//         System.out.printf("%s %d\n", "sortmerge", sortMergePlan.recordsOutput());
-//         System.out.printf("%s %d\n", "nestedloop", nestedLoopPlan.recordsOutput());
-//         System.out.printf("%s %d\n", "hashjoin", hashJoinPlan.recordsOutput());
+			if (tp.mypred.terms.get(0).operator().equals("=")) {
+				
+				bestplan = compare(indexPlan, sortMergePlan, nestedLoopPlan, hashJoinPlan);
+			}
+			else {
+				bestplan = nestedLoopPlan;
+			}
 			if (bestplan != null)
 				besttp = tp;
-//         if (indexPlan != null && (bestplan == null || indexPlan.recordsOutput() < bestplan.recordsOutput())) {
-//             besttp = tp;
-//             bestplan = indexPlan;
-//          }
 		}
 		if (bestplan != null)
 			tableplanners.remove(besttp);
@@ -145,12 +136,10 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		int sortblocks = sortmerge.blocksAccessed() + sortmerge.recordsOutput();
 		int nestedblocks = nested.blocksAccessed() + nested.recordsOutput();
 		int hashblocks = hash.blocksAccessed() + hash.recordsOutput();
-		// int hashblocks = hash.blocksAccessed();
 		List<Integer> lowestJoinBlocks = new ArrayList<>(Arrays.asList(indexblocks, sortblocks, nestedblocks, hashblocks));
-		System.out.println(lowestJoinBlocks.toString());
 		List<Plan> lowestJoinPlan = new ArrayList<>(Arrays.asList(index, sortmerge, nested, hash));
 		int lowestIndex = lowestJoinBlocks.indexOf(Collections.min(lowestJoinBlocks));
-		System.out.println("chosen " + lowestIndex);
+//		System.out.println("chosen " + lowestIndex);
 		return lowestJoinPlan.get(lowestIndex);
 	}
 
