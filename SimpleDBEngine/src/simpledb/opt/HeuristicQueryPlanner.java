@@ -187,10 +187,13 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			ArrayList<String> indexUsed = new ArrayList<>();
 			indexUsed = tp.getIndexUsed();
 			if (indexUsed.size() != 0) {
-				queryPlan.computeIfAbsent("index", k -> new ArrayList<>()).add(indexUsed.get(0).toString());
-				queryPlan.computeIfAbsent("index", k -> new ArrayList<>()).add(indexUsed.get(1).toString());
+				for (int i = 0; i < indexUsed.size()/2; i++) {
+					queryPlan.computeIfAbsent("index", k -> new ArrayList<>()).add(indexUsed.get(i*2).toString());
+					queryPlan.computeIfAbsent("index", k -> new ArrayList<>()).add(indexUsed.get(i*2 + 1).toString());
+				}
 			}
 			if (bestplan == null || plan.recordsOutput() < bestplan.recordsOutput()) {
+				System.out.println(indexUsed);
 				besttp = tp;
 				bestplan = plan;
 			}
