@@ -41,6 +41,18 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		for(String d : data.fields()) {
 			queryPlan.computeIfAbsent("field", k -> new ArrayList<>()).add(d);
 		}
+		
+		//Adding join and selection predicate into query plan
+		for (Term term : data.pred().terms) {
+			if (term.compareField()) {
+				// Join predicate a = b
+				queryPlan.computeIfAbsent("jpred", k -> new ArrayList<>()).add(term.toString());
+			} else {
+				// a > 5
+				queryPlan.computeIfAbsent("spred", k -> new ArrayList<>()).add(term.toString());
+			}
+		}
+		
 		// Step 1: Create a TablePlanner object for each mentioned table
 		for (String tblname : data.tables()) {
 			TablePlanner tp = new TablePlanner(tblname, data.pred(), tx, mdm);
@@ -49,19 +61,6 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 
 		// Step 2: Choose the lowest-size plan to begin the join order
 		Plan currentplan = getLowestSelectPlan();		
-		
-		for (Term term : data.pred().terms) {
-			if (term.compareField()) {
-				// Join predicate a = b
-				queryPlan.computeIfAbsent("jpred", k -> new ArrayList<>()).add(term.toString());
-				System.out.println("both fields");
-			}
-			else {
-				// a > 5
-				queryPlan.computeIfAbsent("spred", k -> new ArrayList<>()).add(term.toString());
-				System.out.println("one constant");
-			}
-		}
 			
 		// Step 3: Repeatedly add a plan to the join order
 		while (!tableplanners.isEmpty()) {
@@ -77,7 +76,6 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		currentplan = new ProjectPlan(currentplan, data.fields());
 
 		// Step 5. Group by
-
 		if (data.aggFields() != null && data.groupList() == null && data.aggFields().size() > 0) {
 			currentplan = new AggregatePlan(tx, currentplan, data.aggFields(), data.fields());
 		}
@@ -87,7 +85,6 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		}
 		
 		getQueryPlan();
-		
 		
 		// Step 6. Sort the final plan node w/ distinct support
 		if (data.sortFields() == null || data.sortFields().isEmpty()) {
@@ -102,7 +99,6 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 
 		else {
 			// sort plan first
-
 			if (data.isDistinct() != false) {
 				// add sorting 
 				for (String field : data.fields()) {
@@ -140,12 +136,18 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			s += " [";
 			for(int i = 0; i < queryPlan.get("table").size(); i++) {
 				String table = queryPlan.get("table").get(i);
-				String fldname = queryPlan.get("index").get(i*2);
-				String indexType = queryPlan.get("index").get((i*2)+1);
-				if(indexType != "empty") {
-					s += "(" + indexType + " index on " + table + ")";
-				} else {
+				//If there is no index used at all
+				//TODO: Must we include a condition that if the join is not IndexJoin, we do not put anything for the index?
+				if (queryPlan.get("index").size() == 0) {
 					s += "(scan " + table + ")";
+				} else {
+					String fldname = queryPlan.get("index").get(i*2);
+					String indexType = queryPlan.get("index").get((i*2)+1);
+					if(indexType != "empty") {
+						s += "(" + indexType + " index on " + table + ")";
+					} else {
+						s += "(scan " + table + ")";
+					}
 				}
 				
 				//if is not the last table
@@ -241,7 +243,6 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		List<Plan> lowestJoinPlan = new ArrayList<>(Arrays.asList(index, sortmerge, nested, hash));
 		int lowestIndex = lowestJoinBlocks.indexOf(Collections.min(lowestJoinBlocks));
 
-		
 		if(lowestIndex == 0) {
 			queryPlan.computeIfAbsent("join", k -> new ArrayList<>()).add("IndexBasedJoin");
 		} else if(lowestIndex == 1) {
