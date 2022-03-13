@@ -165,12 +165,18 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		//select majorid, studentid from enroll, student where majorid > 10;
 		else {
 			for(int i = 0; i < queryPlan.get("table").size(); i++) {
-				String fldname = queryPlan.get("index").get(i*2);
-				String indexType = queryPlan.get("index").get((i*2)+1);
-				System.out.println(indexType);
-				if(indexType != "empty") {
-					s += "(" + indexType + " index on " + fldname + ")";
+				if (!queryPlan.get("index").isEmpty()) {
+					System.out.println("here");
+					String fldname = queryPlan.get("index").get(i*2); 
+					String indexType = queryPlan.get("index").get((i*2)+1);
+					System.out.println(indexType);
+					if(indexType != "empty") {
+						s += "(" + indexType + " index on " + fldname + ")";
+					} else {
+						s += "(scan " + queryPlan.get("table").get(i) + ")";
+					}
 				} else {
+					System.out.println("here");
 					s += "(scan " + queryPlan.get("table").get(i) + ")";
 				}
 			}
