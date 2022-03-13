@@ -84,7 +84,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			currentplan = new GroupByPlan(tx, currentplan, data.groupList(), data.aggFields());
 		}
 		
-//		getQueryPlan();
+		getQueryPlan();
 		
 		// Step 6. Sort the final plan node w/ distinct support
 		if (data.sortFields() == null || data.sortFields().isEmpty()) {
