@@ -53,6 +53,7 @@ class TablePlanner {
 	 */
 	public Plan makeSelectPlan() {
 		Plan p = makeIndexSelect();
+//		Plan p = myplan;
 		if (p == null)
 			p = myplan;
 		return addSelectPred(p);
@@ -157,6 +158,7 @@ class TablePlanner {
 	private Plan makeIndexJoin(Plan current, Schema currsch) {
 		for (String fldname : indexes.keySet()) {
 			String outerfield = mypred.equatesWithField(fldname);
+//			System.out.println(outerfield);
 			if (outerfield != null && currsch.hasField(outerfield)) {
 				IndexInfo ii = indexes.get(fldname);
 				Plan p = new IndexJoinPlan(current, myplan, ii, outerfield);

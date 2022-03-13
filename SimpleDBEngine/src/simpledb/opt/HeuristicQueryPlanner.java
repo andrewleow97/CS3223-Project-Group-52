@@ -43,12 +43,15 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		}
 		// Step 1: Create a TablePlanner object for each mentioned table
 		for (String tblname : data.tables()) {
+			
 			TablePlanner tp = new TablePlanner(tblname, data.pred(), tx, mdm);
+			
 			tableplanners.add(tp);
 		}
-
+//		System.out.println(tableplanners.size());
 		// Step 2: Choose the lowest-size plan to begin the join order
-		Plan currentplan = getLowestSelectPlan();		
+		Plan currentplan = getLowestSelectPlan();
+//		System.out.println(tableplanners.size());
 		
 		for (Term term : data.pred().terms) {
 			if (term.compareField()) {
@@ -62,7 +65,6 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 				System.out.println("one constant");
 			}
 		}
-			
 		// Step 3: Repeatedly add a plan to the join order
 		while (!tableplanners.isEmpty()) {
 			Plan p = getLowestJoinPlan(currentplan);
@@ -86,7 +88,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			currentplan = new GroupByPlan(tx, currentplan, data.groupList(), data.aggFields());
 		}
 		
-		getQueryPlan();
+//		getQueryPlan();
 		
 		
 		// Step 6. Sort the final plan node w/ distinct support
@@ -193,6 +195,8 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 				bestplan = plan;
 			}
 		}
+//		System.out.println(besttp.getIndexUsed());
+		
 		tableplanners.remove(besttp);
 		return bestplan;
 	}
@@ -237,11 +241,11 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			nestedblocks = nested.blocksAccessed() + nested.recordsOutput();
 		if (hash != null)
 			hashblocks = hash.blocksAccessed() + hash.recordsOutput();
+		
 		List<Integer> lowestJoinBlocks = new ArrayList<>(Arrays.asList(indexblocks, sortblocks, nestedblocks, hashblocks));
 		List<Plan> lowestJoinPlan = new ArrayList<>(Arrays.asList(index, sortmerge, nested, hash));
 		int lowestIndex = lowestJoinBlocks.indexOf(Collections.min(lowestJoinBlocks));
-
-		
+		System.out.println(lowestJoinBlocks);
 		if(lowestIndex == 0) {
 			queryPlan.computeIfAbsent("join", k -> new ArrayList<>()).add("IndexBasedJoin");
 		} else if(lowestIndex == 1) {

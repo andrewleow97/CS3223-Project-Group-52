@@ -47,7 +47,7 @@ public class NestedLoopTest {
 
 	private static void useNestedLoopScan(Transaction tx, Plan p1, Plan p2, String fldname1, String fldname2) {
 		// Open an index join scan on the table.
-		Plan nestedLoopPlan = new NestedLoopPlan(tx, p1, p2, fldname1, fldname2);
+		Plan nestedLoopPlan = new NestedLoopPlan(tx, p1, p2, fldname1, fldname2, "=");
 		Scan s = nestedLoopPlan.open();
 
 		while (s.next()) {
