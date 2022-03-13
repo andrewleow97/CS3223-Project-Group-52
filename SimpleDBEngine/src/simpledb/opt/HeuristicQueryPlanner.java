@@ -141,6 +141,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 				if (queryPlan.get("index").size() == 0) {
 					s += "(scan " + table + ")";
 				} else {
+					
 					String fldname = queryPlan.get("index").get(i*2);
 					String indexType = queryPlan.get("index").get((i*2)+1);
 					if(indexType != "empty") {
@@ -169,7 +170,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 				if(!queryPlan.get("index").isEmpty()) {
 					String fldname = queryPlan.get("index").get(i*2);
 					String indexType = queryPlan.get("index").get((i*2)+1);
-					System.out.println(indexType);
+//					System.out.println(indexType);
 
 					if(indexType != "empty") {
 						s += "(" + indexType + " index on " + fldname + ")";
@@ -205,9 +206,10 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			Plan plan = tp.makeSelectPlan();
 			ArrayList<String> indexUsed = new ArrayList<>();
 			indexUsed = tp.getIndexUsedSelectPlan();
-			System.out.println(indexUsed);
+//			System.out.println(indexUsed);
 			if (indexUsed.size() != 0) {
 				for (int i = 0; i < indexUsed.size()/2; i++) {
+					
 					queryPlan.computeIfAbsent("index", k -> new ArrayList<>()).add(indexUsed.get(i*2).toString());
 					queryPlan.computeIfAbsent("index", k -> new ArrayList<>()).add(indexUsed.get(i*2 + 1).toString());
 				}
@@ -215,7 +217,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			if (bestplan == null || plan.recordsOutput() < bestplan.recordsOutput()) {
 				//If the index is not in the join pred. cause we dw it to remove, wanna have it for index join.
 				//if(!queryPlan.get("jpred").get(0).contains(indexUsed.get(0)) ) {
-					System.out.println(indexUsed);
+//					System.out.println(indexUsed);
 					besttp = tp;
 					bestplan = plan;
 				//}
@@ -230,14 +232,13 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 	private Plan getLowestJoinPlan(Plan current) {
 		TablePlanner besttp = null;
 		Plan bestplan = null;
-		
 		for (TablePlanner tp : tableplanners) {
 			
-			// if non-equi join{ bestplan = nestedloopplan}
 			Plan indexPlan = tp.makeIndexJoinPlan(current);
 			//If there is an index used.
 			if (indexPlan != null) {
 				for(int i = 0; i < queryPlan.get("index").size(); i++) {
+					
 					if (tp.getIndexUsedFromJoin().get(0) == queryPlan.get("index").get(i)) {
 						queryPlan.get("index").set(i+1, tp.getIndexUsedFromJoin().get(1));
 					}
@@ -257,7 +258,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 					bestplan = compare(indexPlan, sortMergePlan, nestedLoopPlan, hashJoinPlan);
 				}
 				
-				else {
+				else {// if non-equi join{ bestplan = nestedloopplan}
 					bestplan = nestedLoopPlan;
 					queryPlan.computeIfAbsent("join", k -> new ArrayList<>()).add("NestedLoopsJoin");
 				}
