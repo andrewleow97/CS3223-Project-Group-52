@@ -162,16 +162,34 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 				s += "(" + jp + ")";
 			}
 		}
+		//Else there is no join predicate
 		//select majorid, studentid from enroll, student where majorid > 10;
 		else {
 			for(int i = 0; i < queryPlan.get("table").size(); i++) {
-				String fldname = queryPlan.get("index").get(i*2);
-				String indexType = queryPlan.get("index").get((i*2)+1);
-				System.out.println(indexType);
-				if(indexType != "empty") {
-					s += "(" + indexType + " index on " + fldname + ")";
+				if(!queryPlan.get("index").isEmpty()) {
+					String fldname = queryPlan.get("index").get(i*2);
+					String indexType = queryPlan.get("index").get((i*2)+1);
+					System.out.println(indexType);
+					if(indexType != "empty") {
+						s += "(" + indexType + " index on " + fldname + ")";
+					} else {
+						s += "(scan " + queryPlan.get("table").get(i) + ")";
+					}
+					try {
+						s += queryPlan.get("join").get(i);
+					} catch (IndexOutOfBoundsException e) {
+						continue;
+					}
+					if(!queryPlan.get("join").isEmpty()) {
+						s += queryPlan.get("join").get(0);
+					}
 				} else {
 					s += "(scan " + queryPlan.get("table").get(i) + ")";
+					try {
+						s += queryPlan.get("join").get(i);
+					} catch (IndexOutOfBoundsException e) {
+						continue;
+					}
 				}
 			}
 		}
@@ -225,14 +243,21 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			Plan sortMergePlan = tp.makeSortMergePlan(current);
 			Plan nestedLoopPlan = tp.makeNestedLoopPlan(current);
 			Plan hashJoinPlan = tp.makeHashJoinPlan(current);
-			// TODO: If all plans are null, default the best plan to product plan.
-			if (tp.mypred.terms.size() > 0 && tp.mypred.terms.get(0).operator().equals("=")) {
-				bestplan = compare(indexPlan, sortMergePlan, nestedLoopPlan, hashJoinPlan);
-			}
 			
-			else {
-				bestplan = nestedLoopPlan;
-
+			if(sortMergePlan == null && nestedLoopPlan == null && hashJoinPlan == null) {
+				Plan productPlan = tp.makeDefaultProductPlan(current);
+				bestplan = productPlan;
+				queryPlan.computeIfAbsent("join", k -> new ArrayList<>()).add("ProductPlanJoin");
+			} else {
+				// TODO: If all plans are null, default the best plan to product plan.
+				if (tp.mypred.terms.size() > 0 && tp.mypred.terms.get(0).operator().equals("=")) {
+					bestplan = compare(indexPlan, sortMergePlan, nestedLoopPlan, hashJoinPlan);
+				}
+				
+				else {
+					bestplan = nestedLoopPlan;
+					queryPlan.computeIfAbsent("join", k -> new ArrayList<>()).add("NestedLoopsJoin");
+				}
 			}
 			
 			if (bestplan != null)

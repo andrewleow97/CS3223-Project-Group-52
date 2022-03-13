@@ -76,9 +76,6 @@ class TablePlanner {
 			return null;
 		Plan p = makeIndexJoin(current, currsch);
 
-		if (p == null) {
-			p = makeProductJoin(current, currsch);
-		}
 		return p;
 	}
 
@@ -89,9 +86,6 @@ class TablePlanner {
 			return null;
 		Plan p = makeSortMergeJoin(current, currsch);
 		
-		if (p == null){
-			p = makeProductJoin(current, currsch);
-		}
 		return p;
 	}
 
@@ -102,10 +96,6 @@ class TablePlanner {
 		if (joinpred == null)
 			return null;
 		Plan p = makeNestedLoopJoin(current, currsch);
-
-		if (p == null) {
-			p = makeProductJoin(current, currsch);
-			}
 			
 		return p;
 	}
@@ -117,9 +107,16 @@ class TablePlanner {
 			return null;
 		Plan p = makeHashJoin(current, currsch);
 
-		if (p == null) {
-			p = makeProductJoin(current, currsch);
-		}
+		return p;
+	}
+	
+	public Plan makeDefaultProductPlan(Plan current) {
+		Schema currsch = current.schema();
+		Predicate joinpred = mypred.joinSubPred(myschema, currsch);
+		if (joinpred == null)
+			return null;
+		
+		Plan p = makeProductJoin(current, currsch);
 		return p;
 	}
 
