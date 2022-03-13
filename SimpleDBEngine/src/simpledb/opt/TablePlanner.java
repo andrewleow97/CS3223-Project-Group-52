@@ -113,10 +113,6 @@ class TablePlanner {
 	
 	public Plan makeDefaultProductPlan(Plan current) {
 		Schema currsch = current.schema();
-		Predicate joinpred = mypred.joinSubPred(myschema, currsch);
-		if (joinpred == null)
-			return null;
-		
 		Plan p = makeProductJoin(current, currsch);
 		return p;
 	}
@@ -175,56 +171,59 @@ class TablePlanner {
 	}
 
 	private Plan makeSortMergeJoin(Plan current, Schema currsch) {
-		// tx, p1 = current, p2 = myplan, fldname1, fldname2
-		String fldname1 = mypred.terms.get(0).LHS();
-		String fldname2 = mypred.terms.get(0).RHS();
-		if (currsch.hasField(fldname1)) {
-			Plan p = new MergeJoinPlan(tx, current, myplan, fldname1, fldname2);
-
-			p = addSelectPred(p);
-			return addJoinPred(p, currsch);
-		} else if (currsch.hasField(fldname2)) {
-			Plan p = new MergeJoinPlan(tx, myplan, current, fldname1, fldname2);
-			p = addSelectPred(p);
-			return addJoinPred(p, currsch);
+		for (Term t : mypred.terms) {
+			String fldname1 = t.LHS();
+			String fldname2 = t.RHS();
+			if (currsch.hasField(fldname1)) {
+				Plan p = new MergeJoinPlan(tx, current, myplan, fldname1, fldname2);
+	
+				p = addSelectPred(p);
+				return addJoinPred(p, currsch);
+			} else if (currsch.hasField(fldname2)) {
+				Plan p = new MergeJoinPlan(tx, myplan, current, fldname1, fldname2);
+				p = addSelectPred(p);
+				return addJoinPred(p, currsch);
+			}
 		}
-
 		return null;
 	}
 
 	private Plan makeNestedLoopJoin(Plan current, Schema currsch) {
-		String fldname1 = mypred.terms.get(0).LHS();
-		String fldname2 = mypred.terms.get(0).RHS();
-		String opr = mypred.terms.get(0).operator();
-		
-		if (currsch.hasField(fldname1)) {
-			Plan p = new NestedLoopPlan(tx, current, myplan, fldname1, fldname2, opr);
-			p = addSelectPred(p);
-			return addJoinPred(p, currsch);
-		} else if (currsch.hasField(fldname2)) {
-			
-			Plan p = new NestedLoopPlan(tx, myplan, current, fldname1, fldname2, opr);
-			p = addSelectPred(p);
-			return addJoinPred(p, currsch);
+		for (Term t : mypred.terms) {
+			String fldname1 = t.LHS();
+			String fldname2 = t.RHS();
+			String opr = t.operator();
+			if (currsch.hasField(fldname1)) {
+				Plan p = new NestedLoopPlan(tx, current, myplan, fldname1, fldname2, opr);
+				p = addSelectPred(p);
+				return addJoinPred(p, currsch);
+			} else if (currsch.hasField(fldname2)) {
+				
+				Plan p = new NestedLoopPlan(tx, myplan, current, fldname1, fldname2, opr);
+				p = addSelectPred(p);
+				return addJoinPred(p, currsch);
+			}
 		}
 		return null;
 	}
 
 	private Plan makeHashJoin(Plan current, Schema currsch) {
-		String fldname1 = mypred.terms.get(0).LHS();
-		String fldname2 = mypred.terms.get(0).RHS();
-		if (currsch.hasField(fldname1)) {
-			HashPartitionPlan currpartition = new HashPartitionPlan(tx, current, fldname1);
-			HashPartitionPlan mypartition = new HashPartitionPlan(tx, myplan, fldname2);
-			Plan p = new HashJoinPlan(tx, currpartition, mypartition, fldname1, fldname2);
-			p = addSelectPred(p);
-			return addJoinPred(p, currsch);
-		} else if (currsch.hasField(fldname2)) {
-			HashPartitionPlan currpartition = new HashPartitionPlan(tx, current, fldname2);
-			HashPartitionPlan mypartition = new HashPartitionPlan(tx, myplan, fldname1);
-			Plan p = new HashJoinPlan(tx, currpartition, mypartition, fldname2, fldname1);
-			p = addSelectPred(p);
-			return addJoinPred(p, currsch);
+		for (Term t : mypred.terms) {
+			String fldname1 = t.LHS();
+			String fldname2 = t.RHS();
+			if (currsch.hasField(fldname1)) {
+				HashPartitionPlan currpartition = new HashPartitionPlan(tx, current, fldname1);
+				HashPartitionPlan mypartition = new HashPartitionPlan(tx, myplan, fldname2);
+				Plan p = new HashJoinPlan(tx, currpartition, mypartition, fldname1, fldname2);
+				p = addSelectPred(p);
+				return addJoinPred(p, currsch);
+			} else if (currsch.hasField(fldname2)) {
+				HashPartitionPlan currpartition = new HashPartitionPlan(tx, current, fldname2);
+				HashPartitionPlan mypartition = new HashPartitionPlan(tx, myplan, fldname1);
+				Plan p = new HashJoinPlan(tx, currpartition, mypartition, fldname2, fldname1);
+				p = addSelectPred(p);
+				return addJoinPred(p, currsch);
+			}
 		}
 
 		return null;

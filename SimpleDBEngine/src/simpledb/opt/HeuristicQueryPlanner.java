@@ -65,6 +65,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		// Step 3: Repeatedly add a plan to the join order
 		while (!tableplanners.isEmpty()) {
 			Plan p = getLowestJoinPlan(currentplan);
+//			System.out.println(p.schema().fields());
 			if (p != null)
 				currentplan = p;
 			else // no applicable join
@@ -152,7 +153,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 				
 				//if is not the last table
 				if (i != queryPlan.get("table").size()-1) {
-					s += " " + queryPlan.get("join").get(0) + " ";
+					s += " " + queryPlan.get("join").get(i) + " ";
 				}
 			}
 			s += "] ";
@@ -182,7 +183,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 						continue;
 					}
 					if(!queryPlan.get("join").isEmpty()) {
-						s += queryPlan.get("join").get(0);
+						s += queryPlan.get("join").get(i);
 					}
 				} else {
 					s += "(scan " + queryPlan.get("table").get(i) + ")";
@@ -246,7 +247,9 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			Plan sortMergePlan = tp.makeSortMergePlan(current);
 			Plan nestedLoopPlan = tp.makeNestedLoopPlan(current);
 			Plan hashJoinPlan = tp.makeHashJoinPlan(current);
-			System.out.println(queryPlan);
+//			System.out.println(queryPlan);
+//			System.out.println(current.schema().fields());
+			
 			if(sortMergePlan == null && nestedLoopPlan == null && hashJoinPlan == null) {
 				Plan productPlan = tp.makeDefaultProductPlan(current);
 				bestplan = productPlan;
@@ -274,14 +277,14 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 	private Plan compare(Plan index, Plan sortmerge, Plan nested, Plan hash) {
 		int indexblocks = Integer.MAX_VALUE, sortblocks = Integer.MAX_VALUE, nestedblocks = Integer.MAX_VALUE, hashblocks = Integer.MAX_VALUE;
 		if (index != null)
-			indexblocks = index.blocksAccessed() + index.recordsOutput();
+			indexblocks = index.blocksAccessed();
 		if (sortmerge != null) {
-			sortblocks = sortmerge.blocksAccessed() + sortmerge.recordsOutput();
+			sortblocks = sortmerge.blocksAccessed();
 		}
 		if (nested != null)
-			nestedblocks = nested.blocksAccessed() + nested.recordsOutput();
+			nestedblocks = nested.blocksAccessed();
 		if (hash != null)
-			hashblocks = hash.blocksAccessed() + hash.recordsOutput();
+			hashblocks = hash.blocksAccessed();
 		
 		List<Integer> lowestJoinBlocks = new ArrayList<>(Arrays.asList(indexblocks, sortblocks, nestedblocks, hashblocks));
 		List<Plan> lowestJoinPlan = new ArrayList<>(Arrays.asList(index, sortmerge, nested, hash));
@@ -307,6 +310,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			if (bestplan == null || plan.recordsOutput() < bestplan.recordsOutput()) {
 				besttp = tp;
 				bestplan = plan;
+				queryPlan.computeIfAbsent("join", k -> new ArrayList<>()).add("ProductPlanJoin");
 			}
 		}
 		tableplanners.remove(besttp);
