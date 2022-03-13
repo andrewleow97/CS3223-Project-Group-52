@@ -138,10 +138,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 				String table = queryPlan.get("table").get(i);
 				//If there is no index used at all
 				//TODO: Must we include a condition that if the join is not IndexJoin, we do not put anything for the index?
-				if (queryPlan.get("index").size() == 0) {
-					s += "(scan " + table + ")";
-				} else {
-					
+				try {
 					String fldname = queryPlan.get("index").get(i*2);
 					String indexType = queryPlan.get("index").get((i*2)+1);
 					if(indexType != "empty") {
@@ -149,6 +146,8 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 					} else {
 						s += "(scan " + table + ")";
 					}
+				} catch (IndexOutOfBoundsException e) {
+					s += "(scan " + table + ")";
 				}
 				
 				//if is not the last table
@@ -247,7 +246,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			Plan sortMergePlan = tp.makeSortMergePlan(current);
 			Plan nestedLoopPlan = tp.makeNestedLoopPlan(current);
 			Plan hashJoinPlan = tp.makeHashJoinPlan(current);
-			
+			System.out.println(queryPlan);
 			if(sortMergePlan == null && nestedLoopPlan == null && hashJoinPlan == null) {
 				Plan productPlan = tp.makeDefaultProductPlan(current);
 				bestplan = productPlan;
