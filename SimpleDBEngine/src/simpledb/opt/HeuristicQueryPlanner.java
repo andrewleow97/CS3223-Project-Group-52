@@ -165,11 +165,15 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		//select majorid, studentid from enroll, student where majorid > 10;
 		else {
 			for(int i = 0; i < queryPlan.get("table").size(); i++) {
-				String fldname = queryPlan.get("index").get(i*2);
-				String indexType = queryPlan.get("index").get((i*2)+1);
-				System.out.println(indexType);
-				if(indexType != "empty") {
-					s += "(" + indexType + " index on " + fldname + ")";
+				if (!queryPlan.get("index").isEmpty()) {
+					
+					String fldname = queryPlan.get("index").get(i*2); 
+					String indexType = queryPlan.get("index").get((i*2)+1);
+					if(indexType != "empty") {
+						s += "(" + indexType + " index on " + fldname + ")";
+					} else {
+						s += "(scan " + queryPlan.get("table").get(i) + ")";
+					}
 				} else {
 					s += "(scan " + queryPlan.get("table").get(i) + ")";
 				}
@@ -234,6 +238,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			
 			else {
 				bestplan = nestedLoopPlan;
+				queryPlan.computeIfAbsent("join", k -> new ArrayList<>()).add("NestedLoopsJoin");
 
 			}
 			
