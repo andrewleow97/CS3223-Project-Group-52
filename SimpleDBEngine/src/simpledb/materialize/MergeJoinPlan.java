@@ -98,5 +98,9 @@ public class MergeJoinPlan implements Plan {
    public Schema schema() {
       return sch;
    }
+   
+   public String planType() {
+	   return "SortMergePlan";
+   }
 }
 

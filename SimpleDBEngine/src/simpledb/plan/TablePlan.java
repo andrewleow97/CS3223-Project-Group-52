@@ -9,7 +9,7 @@ import simpledb.record.*;
   * @author Edward Sciore
   */
 public class TablePlan implements Plan {
-   private String tblname;
+   public String tblname;
    private Transaction tx;
    private Layout layout;
    private StatInfo si;

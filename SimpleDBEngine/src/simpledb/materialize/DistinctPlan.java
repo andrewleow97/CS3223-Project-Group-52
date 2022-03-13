@@ -92,4 +92,8 @@ public class DistinctPlan implements Plan {
 	public Schema schema() {
 		return sch;
 	}
+	
+	   public String planType() {
+		   return "DistinctPlan";
+	   }
 }

@@ -112,4 +112,8 @@ public class MultibufferProductPlan implements Plan {
       dest.close();
       return t;
    }
+   
+   public String planType() {
+	   return "MultibufferProductPlan";
+   }
 }

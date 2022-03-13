@@ -121,4 +121,8 @@ public class HashJoinPlan implements Plan {
 	public Schema schema() {
 		return sch;
 	}
+	
+	   public String planType() {
+		   return "HashJoinPlan";
+	   }
 }

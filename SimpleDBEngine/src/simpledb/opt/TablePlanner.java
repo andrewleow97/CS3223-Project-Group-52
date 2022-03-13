@@ -22,7 +22,7 @@ import simpledb.plan.*;
  * @author Edward Sciore
  */
 class TablePlanner {
-	private TablePlan myplan;
+	public TablePlan myplan;
 	public Predicate mypred;
 	private Schema myschema;
 	private Map<String, IndexInfo> indexes;

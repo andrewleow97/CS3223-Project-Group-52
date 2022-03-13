@@ -143,5 +143,9 @@ public class HashPartitionPlan implements Plan {
 		}
 		return temps;
 	}
-
+	
+	
+	   public String planType() {
+		   return "HashPartitionPlan";
+	   }
 }

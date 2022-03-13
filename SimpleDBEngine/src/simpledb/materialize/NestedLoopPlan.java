@@ -96,5 +96,9 @@ public class NestedLoopPlan implements Plan {
    public Schema schema() {
       return sch;
    }
+   
+   public String planType() {
+	   return "NestedLoopPlan";
+   }
 }
 
