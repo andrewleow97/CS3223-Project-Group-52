@@ -166,15 +166,23 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		//select majorid, studentid from enroll, student where majorid > 10;
 		else {
 			for(int i = 0; i < queryPlan.get("table").size(); i++) {
+<<<<<<< HEAD
 				if(!queryPlan.get("index").isEmpty()) {
 					String fldname = queryPlan.get("index").get(i*2);
 					String indexType = queryPlan.get("index").get((i*2)+1);
 					System.out.println(indexType);
+=======
+				if (!queryPlan.get("index").isEmpty()) {
+					
+					String fldname = queryPlan.get("index").get(i*2); 
+					String indexType = queryPlan.get("index").get((i*2)+1);
+>>>>>>> 4e1686144f2da32befee206f73f16381920c2097
 					if(indexType != "empty") {
 						s += "(" + indexType + " index on " + fldname + ")";
 					} else {
 						s += "(scan " + queryPlan.get("table").get(i) + ")";
 					}
+<<<<<<< HEAD
 					try {
 						s += queryPlan.get("join").get(i);
 					} catch (IndexOutOfBoundsException e) {
@@ -183,6 +191,8 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 					if(!queryPlan.get("join").isEmpty()) {
 						s += queryPlan.get("join").get(0);
 					}
+=======
+>>>>>>> 4e1686144f2da32befee206f73f16381920c2097
 				} else {
 					s += "(scan " + queryPlan.get("table").get(i) + ")";
 					try {
@@ -220,6 +230,8 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 				//}
 			}
 		}
+//		System.out.println(besttp.getIndexUsed());
+		
 		tableplanners.remove(besttp);
 		return bestplan;
 	}
@@ -244,6 +256,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			Plan nestedLoopPlan = tp.makeNestedLoopPlan(current);
 			Plan hashJoinPlan = tp.makeHashJoinPlan(current);
 			
+<<<<<<< HEAD
 			if(sortMergePlan == null && nestedLoopPlan == null && hashJoinPlan == null) {
 				Plan productPlan = tp.makeDefaultProductPlan(current);
 				bestplan = productPlan;
@@ -258,6 +271,12 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 					bestplan = nestedLoopPlan;
 					queryPlan.computeIfAbsent("join", k -> new ArrayList<>()).add("NestedLoopsJoin");
 				}
+=======
+			else {
+				bestplan = nestedLoopPlan;
+				queryPlan.computeIfAbsent("join", k -> new ArrayList<>()).add("NestedLoopsJoin");
+
+>>>>>>> 4e1686144f2da32befee206f73f16381920c2097
 			}
 			
 			if (bestplan != null)
@@ -279,10 +298,10 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			nestedblocks = nested.blocksAccessed() + nested.recordsOutput();
 		if (hash != null)
 			hashblocks = hash.blocksAccessed() + hash.recordsOutput();
+		
 		List<Integer> lowestJoinBlocks = new ArrayList<>(Arrays.asList(indexblocks, sortblocks, nestedblocks, hashblocks));
 		List<Plan> lowestJoinPlan = new ArrayList<>(Arrays.asList(index, sortmerge, nested, hash));
 		int lowestIndex = lowestJoinBlocks.indexOf(Collections.min(lowestJoinBlocks));
-
 		if(lowestIndex == 0) {
 			queryPlan.computeIfAbsent("join", k -> new ArrayList<>()).add("IndexBasedJoin");
 		} else if(lowestIndex == 1) {

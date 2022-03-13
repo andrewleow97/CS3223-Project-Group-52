@@ -25,3 +25,6 @@ hs_err_pid*
 test/
 java-2021-12/
 *.classpath
+SimpleDBClients/studentdb/idxcat.tbl
+SimpleDBClients/studentdb/idxcat.tbl
+*temp*.tbl
