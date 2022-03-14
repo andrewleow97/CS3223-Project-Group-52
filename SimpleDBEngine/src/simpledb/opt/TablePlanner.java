@@ -140,7 +140,12 @@ class TablePlanner {
 				}
 				storeIndexSelectPlan.put(myplan.tblname, fldname + "(" + ii.getIndexType() + ")");
 				System.out.println("index on " + fldname + " used");
-				return new IndexSelectPlan(myplan, ii, val);
+				
+				String operator = mypred.getSelectOperator(fldname);
+				if (operator == null) {
+					System.out.println("operator is null");
+				}
+				return new IndexSelectPlan(myplan, ii, val, operator);
 			}
 		}
 		return null;
@@ -160,8 +165,13 @@ class TablePlanner {
 			String outerfield = mypred.equatesWithField(fldname);
 			if (outerfield != null && currsch.hasField(outerfield)) {
 				IndexInfo ii = indexes.get(fldname);
+				
+				String operator = mypred.getJoinOperator(fldname);
+				if (operator == null) {
+					System.out.println("operator is null");
+				}
 				indexUsedJoin.put(myplan.tblname, fldname + "(" + ii.getIndexType() + ")");
-				Plan p = new IndexJoinPlan(current, myplan, ii, outerfield);
+				Plan p = new IndexJoinPlan(current, myplan, ii, outerfield, operator);
 				p = addSelectPred(p);
 				return addJoinPred(p, currsch);
 			}

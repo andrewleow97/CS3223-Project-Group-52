@@ -15,6 +15,7 @@ public class IndexSelectPlan implements Plan {
    private Plan p;
    private IndexInfo ii;
    private Constant val;
+   private String opr;
    
    /**
     * Creates a new indexselect node in the query tree
@@ -24,10 +25,11 @@ public class IndexSelectPlan implements Plan {
     * @param val the selection constant
     * @param tx the calling transaction 
     */
-   public IndexSelectPlan(Plan p, IndexInfo ii, Constant val) {
+   public IndexSelectPlan(Plan p, IndexInfo ii, Constant val, String opr) {
       this.p = p;
       this.ii = ii;
       this.val = val;
+      this.opr = opr;
    }
    
    /** 
@@ -38,7 +40,7 @@ public class IndexSelectPlan implements Plan {
       // throws an exception if p is not a tableplan.
       TableScan ts = (TableScan) p.open();
       Index idx = ii.open();
-      return new IndexSelectScan(ts, idx, val);
+      return new IndexSelectScan(ts, idx, val, opr);
    }
    
    /**

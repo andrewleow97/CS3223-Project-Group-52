@@ -26,11 +26,14 @@ public class IndexJoinScan implements Scan {
     * @param joinfield the LHS field used for joining
     * @param rhs the RHS scan
     */
-   public IndexJoinScan(Scan lhs, Index idx, String joinfield, TableScan rhs) {
+   public IndexJoinScan(Scan lhs, Index idx, String joinfield, TableScan rhs, String opr) {
       this.lhs = lhs;
       this.idx  = idx;
       this.joinfield = joinfield;
       this.rhs = rhs;
+      if (idx.getClass().getSimpleName().equals("BTreeIndex")) {
+    	  idx.setOpr(opr);
+      }
       beforeFirst();
    }
    

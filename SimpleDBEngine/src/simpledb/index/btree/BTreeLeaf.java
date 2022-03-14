@@ -16,6 +16,7 @@ public class BTreeLeaf {
    private BTPage contents;
    private int currentslot;
    private String filename;
+   private String opr;
 
    /**
     * Opens a buffer to hold the specified leaf block.
@@ -25,14 +26,16 @@ public class BTreeLeaf {
     * @param layout the metadata of the B-tree leaf file
     * @param searchkey the search key value
     * @param tx the calling transaction
+    * @param opr operator for comparison
     */
-   public BTreeLeaf(Transaction tx, BlockId blk, Layout layout, Constant searchkey) {
+   public BTreeLeaf(Transaction tx, BlockId blk, Layout layout, Constant searchkey, String opr) {
       this.tx = tx;
       this.layout = layout;
       this.searchkey = searchkey;
       contents = new BTPage(tx, blk, layout);
       currentslot = contents.findSlotBefore(searchkey);
-      filename = blk.fileName();            
+      filename = blk.fileName();     
+      this.opr = opr;
    }
 
    /**
@@ -52,10 +55,64 @@ public class BTreeLeaf {
       currentslot++;
       if (currentslot >= contents.getNumRecs()) 
          return tryOverflow();
-      else if (contents.getDataVal(currentslot).equals(searchkey))
-         return true;
+      else if (isValid(contents.getDataVal(currentslot), searchkey)) { 
+    	  // iterate to next 
+    	  while (isValid(contents.getDataVal(currentslot), searchkey)) {
+    		  if (isSatisfied(contents.getDataVal(currentslot), searchkey))
+    			  return true;
+    		  currentslot++;
+    	  }
+    	  return tryOverflow();
+      }
       else 
          return tryOverflow();
+   }
+   
+   // set currentslot to search for the first block
+   public void pushFirst() {
+	   currentslot = -1;
+   }
+   
+   // Check if current tuple is valid
+   private boolean isValid(Constant lhs, Constant rhs) {
+	   switch(this.opr) {
+	      case "=":
+	    	  return lhs.compareTo(rhs) == 0; // tuples = are valid
+	      case "<":
+	    	  return lhs.compareTo(rhs) < 0; // tuples < are valid
+	      case "<=":
+	    	  return lhs.compareTo(rhs) < 0 || lhs.compareTo(rhs) == 0; // tuples <= are valid
+	      case ">":
+	    	  return lhs.compareTo(rhs) >= 0; // tuples >= are valid
+	      case ">=":
+	    	  return lhs.compareTo(rhs) > 0 || lhs.compareTo(rhs) == 0; //tuples >= are valid
+	      case "!=":
+	    	  return true; // search all
+	      case "<>":
+	    	  return true; // search all
+		  default:
+			  return false;  
+	      }
+   }
+   private boolean isSatisfied(Constant lhs, Constant rhs) {
+	   switch(this.opr) {
+	      case "=":
+	    	  return lhs.compareTo(rhs) == 0;
+	      case "<":
+	    	  return lhs.compareTo(rhs) < 0;
+	      case "<=":
+	    	  return lhs.compareTo(rhs) < 0 || lhs.compareTo(rhs) == 0;
+	      case ">":
+	    	  return lhs.compareTo(rhs) > 0;
+	      case ">=":
+	    	  return lhs.compareTo(rhs) > 0 || lhs.compareTo(rhs) == 0;
+	      case "!=":
+	    	  return lhs.compareTo(rhs) != 0;
+	      case "<>":
+	    	  return lhs.compareTo(rhs) != 0;
+		  default:
+			  return false;  
+	      }
    }
 
    /**
@@ -136,7 +193,7 @@ public class BTreeLeaf {
    private boolean tryOverflow() {
       Constant firstkey = contents.getDataVal(0);
       int flag = contents.getFlag();
-      if (!searchkey.equals(firstkey) || flag < 0)
+      if (!isValid(firstkey, searchkey) || flag < 0) 
          return false;
       contents.close();
       BlockId nextblk = new BlockId(filename, flag);

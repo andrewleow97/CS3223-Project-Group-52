@@ -17,6 +17,7 @@ public class BTreeIndex implements Index {
    private String leaftbl;
    private BTreeLeaf leaf = null;
    private BlockId rootblk;
+   public String opr = "="; // for passing down inequality
 
    /**
     * Opens a B-tree index for the specified index.
@@ -76,7 +77,11 @@ public class BTreeIndex implements Index {
       int blknum = root.search(searchkey);
       root.close();
       BlockId leafblk = new BlockId(leaftbl, blknum);
-      leaf = new BTreeLeaf(tx, leafblk, leafLayout, searchkey);
+      leaf = new BTreeLeaf(tx, leafblk, leafLayout, searchkey, opr);
+      
+      if (opr.equals("<") || opr.equals("<=") || opr.equals("<>") || opr.equals("!=")) {
+    	  leaf.pushFirst();
+      }
    }
 
    /**
@@ -154,5 +159,10 @@ public class BTreeIndex implements Index {
     */
    public static int searchCost(int numblocks, int rpb) {
       return 1 + (int)(Math.log(numblocks) / Math.log(rpb));
+   }
+   
+   // to pass operator down to leaf for comparison
+   public void setOpr(String opr) {
+	   this.opr = opr;
    }
 }
