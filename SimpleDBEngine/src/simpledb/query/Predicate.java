@@ -124,6 +124,15 @@ public class Predicate {
       }
       return null;
    }
+   
+   public String getOperator(String fldname) {
+	      for (Term t : terms) {
+	         Constant c = t.equatesWithConstant(fldname);
+	         if (c != null)
+	            return t.operator();
+	      }
+	      return null;
+   }
 
    /**
     * Determine if there is a term of the form "F1=F2"

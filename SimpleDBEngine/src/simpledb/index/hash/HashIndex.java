@@ -123,4 +123,8 @@ public class HashIndex implements Index {
 	public static int searchCost(int numblocks, int rpb){
 		return numblocks / HashIndex.NUM_BUCKETS;
 	}
+	
+	// function not used
+	public void setOpr(String opr) {
+	}
 }

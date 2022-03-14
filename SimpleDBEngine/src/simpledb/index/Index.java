@@ -51,4 +51,6 @@ public interface Index {
     * Closes the index.
     */
    public void    close();
+   
+   public void setOpr(String opr);
 }

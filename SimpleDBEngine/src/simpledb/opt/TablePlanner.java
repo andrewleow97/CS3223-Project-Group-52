@@ -137,7 +137,11 @@ class TablePlanner {
 				storeIndexSelectPlan.add(fldname);
 				storeIndexSelectPlan.add(ii.getIndexType());
 				System.out.println("index on " + fldname + " used");
-				return new IndexSelectPlan(myplan, ii, val);
+				String operator = mypred.getOperator(fldname);
+				if (operator == null) {
+					System.out.println("operator is null");
+				}
+				return new IndexSelectPlan(myplan, ii, val, operator);
 			} else {
 				storeIndexSelectPlan.add(fldname);
 				storeIndexSelectPlan.add("empty");
@@ -162,7 +166,12 @@ class TablePlanner {
 				IndexInfo ii = indexes.get(fldname);
 				indexUsedJoin.add(fldname);
 				indexUsedJoin.add(ii.getIndexType());
-				Plan p = new IndexJoinPlan(current, myplan, ii, outerfield);
+				
+				String operator = mypred.getOperator(fldname);
+				if (operator == null) {
+					System.out.println("operator is null");
+				}
+				Plan p = new IndexJoinPlan(current, myplan, ii, outerfield, operator);
 				p = addSelectPred(p);
 				return addJoinPred(p, currsch);
 			}

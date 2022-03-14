@@ -16,6 +16,7 @@ public class IndexJoinPlan implements Plan {
    private IndexInfo ii;
    private String joinfield;
    private Schema sch = new Schema();
+   private String opr;
    
    /**
     * Implements the join operator,
@@ -25,11 +26,12 @@ public class IndexJoinPlan implements Plan {
     * @param ii information about the right-hand index
     * @param joinfield the left-hand field used for joining
     */
-   public IndexJoinPlan(Plan p1, Plan p2, IndexInfo ii, String joinfield) {
+   public IndexJoinPlan(Plan p1, Plan p2, IndexInfo ii, String joinfield, String opr) {
       this.p1 = p1;
       this.p2 = p2;
       this.ii = ii;
       this.joinfield = joinfield;
+      this.opr = opr;
       sch.addAll(p1.schema());
       sch.addAll(p2.schema());
    }
@@ -43,7 +45,7 @@ public class IndexJoinPlan implements Plan {
       // throws an exception if p2 is not a tableplan
       TableScan ts = (TableScan) p2.open();
       Index idx = ii.open();
-      return new IndexJoinScan(s, idx, joinfield, ts);
+      return new IndexJoinScan(s, idx, joinfield, ts, opr);
    }
    
    /**
