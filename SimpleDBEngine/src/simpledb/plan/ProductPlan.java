@@ -76,4 +76,8 @@ public class ProductPlan implements Plan {
    public Schema schema() {
       return schema;
    }
+   
+   public String planType() {
+	   return "ProductPlan";
+   }
 }

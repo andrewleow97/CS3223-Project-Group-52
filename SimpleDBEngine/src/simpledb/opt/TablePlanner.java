@@ -27,8 +27,8 @@ class TablePlanner {
 	private Schema myschema;
 	private Map<String, IndexInfo> indexes;
 	private Transaction tx;
-	private ArrayList<String> storeIndexSelectPlan = new ArrayList<String>();
-	private ArrayList<String> indexUsedJoin = new ArrayList<String>();
+	private HashMap<String, String> storeIndexSelectPlan = new HashMap<>();
+	private HashMap<String, String> indexUsedJoin = new HashMap<>();
 
 	/**
 	 * Creates a new table planner. The specified predicate applies to the entire
@@ -129,39 +129,36 @@ class TablePlanner {
 	}
 
 	private Plan makeIndexSelect() {
-		storeIndexSelectPlan = new ArrayList<String>();
+		storeIndexSelectPlan = new HashMap<String, String>();
 		for (String fldname : indexes.keySet()) {
+//			System.out.println(fldname);
+//			System.out.println(mypred);
 			Constant val = mypred.equatesWithConstant(fldname);
+			System.out.println("value" + val);
 			if (val != null) {
 				IndexInfo ii = indexes.get(fldname);
-				storeIndexSelectPlan.add(fldname);
-				storeIndexSelectPlan.add(ii.getIndexType());
+				storeIndexSelectPlan.put(myplan.tblname, fldname + "(" + ii.getIndexType() + ")");
 				System.out.println("index on " + fldname + " used");
 				return new IndexSelectPlan(myplan, ii, val);
-			} else {
-				storeIndexSelectPlan.add(fldname);
-				storeIndexSelectPlan.add("empty");
 			}
 		}
 		return null;
 	}
 
-	public ArrayList<String> getIndexUsedSelectPlan() {
+	public HashMap<String, String> getIndexUsedSelectPlan() {
 		return storeIndexSelectPlan;
 	}
 	
-	public ArrayList<String> getIndexUsedFromJoin() {
+	public HashMap<String, String> getIndexUsedFromJoin() {
 		return indexUsedJoin;
 	}
 	
 	private Plan makeIndexJoin(Plan current, Schema currsch) {
 		for (String fldname : indexes.keySet()) {
 			String outerfield = mypred.equatesWithField(fldname);
-//			System.out.println(outerfield);
 			if (outerfield != null && currsch.hasField(outerfield)) {
 				IndexInfo ii = indexes.get(fldname);
-				indexUsedJoin.add(fldname);
-				indexUsedJoin.add(ii.getIndexType());
+				indexUsedJoin.put(myplan.tblname, fldname + "(" + ii.getIndexType() + ")");
 				Plan p = new IndexJoinPlan(current, myplan, ii, outerfield);
 				p = addSelectPred(p);
 				return addJoinPred(p, currsch);

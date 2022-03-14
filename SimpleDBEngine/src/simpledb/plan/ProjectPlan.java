@@ -69,4 +69,8 @@ public class ProjectPlan implements Plan {
    public Schema schema() {
       return schema;
    }
+   
+   public String planType() {
+	   return "ProjectPlan";
+   }
 }

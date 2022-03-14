@@ -38,4 +38,8 @@ public class OptimizedProductPlan implements Plan {
    public Schema schema() {
       return bestplan.schema();
    }
+   
+   public String planType() {
+	   return "OptimizedProductPlan";
+   }
 }

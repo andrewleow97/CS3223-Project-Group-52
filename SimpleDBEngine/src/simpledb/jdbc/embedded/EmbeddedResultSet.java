@@ -22,7 +22,7 @@ public class EmbeddedResultSet extends ResultSetAdapter {
     * @throws RemoteException
     */
    public EmbeddedResultSet(Plan plan, EmbeddedConnection conn) throws SQLException {
-      s = plan.open();
+	  s = plan.open();
       sch = plan.schema();
       this.conn = conn;
    }
