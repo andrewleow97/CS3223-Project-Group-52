@@ -141,7 +141,7 @@ class TablePlanner {
 				storeIndexSelectPlan.put(myplan.tblname, fldname + "(" + ii.getIndexType() + ")");
 				System.out.println("index on " + fldname + " used");
 				
-				String operator = mypred.getOperator(fldname);
+				String operator = mypred.getSelectOperator(fldname);
 				if (operator == null) {
 					System.out.println("operator is null");
 				}
@@ -165,7 +165,7 @@ class TablePlanner {
 			if (outerfield != null && currsch.hasField(outerfield)) {
 				IndexInfo ii = indexes.get(fldname);
 				
-				String operator = mypred.getOperator(fldname);
+				String operator = mypred.getJoinOperator(fldname);
 				if (operator == null) {
 					System.out.println("operator is null");
 				}
