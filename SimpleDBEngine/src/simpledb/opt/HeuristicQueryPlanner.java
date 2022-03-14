@@ -38,7 +38,8 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		queryPlan.computeIfAbsent("spred", k -> new ArrayList<>());
 		queryPlan.computeIfAbsent("jpred", k -> new ArrayList<>());
 		queryPlan.computeIfAbsent("join", k -> new ArrayList<>());
-		queryPlan.computeIfAbsent("index", k -> new ArrayList<>());
+		queryPlan.computeIfAbsent("selectindex", k -> new ArrayList<>());
+		queryPlan.computeIfAbsent("joinindex", k -> new ArrayList<>());
 
 		for(String d : data.fields()) {
 			queryPlan.computeIfAbsent("field", k -> new ArrayList<>()).add(d);
@@ -63,7 +64,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 
 		// Step 2: Choose the lowest-size plan to begin the join order
 		Plan currentplan = getLowestSelectPlan();		
-			
+		
 		// Step 3: Repeatedly add a plan to the join order
 		while (!tableplanners.isEmpty()) {
 			Plan p = getLowestJoinPlan(currentplan);
@@ -93,10 +94,30 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		if (data.sortFields() == null || data.sortFields().isEmpty()) {
 			if (data.isDistinct() != false) {
 				// sort plan first
+				
 				currentplan = new SortPlan(tx, currentplan, data.fields());
 				// eliminate duplicates
 				currentplan = new DistinctPlan(tx, currentplan, data.fields());
 			}
+//			try {System.out.println("here");
+//			Scan s = currentplan.open();
+//			System.out.println("here");
+//			s.beforeFirst();
+//			
+//			boolean hasnext = true;
+//			while (hasnext) {
+//				for (String fldname : currentplan.schema().fields())
+//					try {
+//						Constant c = s.getVal(fldname);
+//						System.out.println(c);
+//					} catch (NullPointerException e) {
+//						System.out.println("s is empty");
+//					}
+//				hasnext = s.next();
+//			}
+//			} catch (Exception e) {
+//			}
+//			
 			return currentplan;
 		}
 
@@ -141,40 +162,37 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			
 			for(int i = 0; i < queryPlan.get("table").size(); i++) {
 				String table = queryPlan.get("table").get(i);
-				//If there is no index used at all
-				//TODO: reformat how to decide if its selection or join
-					iJoinIndex %= 2;
-				
-				//if is not the last table
-				if (i != queryPlan.get("table").size()-1) {
+		        //If there is no index used at all
+		        //TODO: reformat how to decide if its selection or join
+		          iJoinIndex %= 2;
+		        
+		        //if is not the last table
 
-					if (queryPlan.get("join").get(iJoinIndex).contains("Index")) {
+		        if (queryPlan.get("join").get(iJoinIndex).contains("Index")) {
 
-						int indexAtJoinIndex = queryPlan.get("joinindex").indexOf(table);
-						if (indexAtJoinIndex < 0) {
-							s += "(scan " + table + ")";
-							s += " " + queryPlan.get("join").get(i) + " ";
-							continue;
-						}
-							
-						else {
-						String joinIndexType = queryPlan.get("joinindex").get(indexAtJoinIndex + 1);
-						s += "(" + joinIndexType + " on " + table + ")";
-						s += " " + queryPlan.get("join").get(i) + " ";
-//								"(scan " + table + " (" + joinIndexType + ")";						
-						iJoinIndex += 1;
-						continue;
-						}
-					}
-					
-				}
-				int indexAtJoinIndex = queryPlan.get("joinindex").indexOf(table);
-				if (indexAtJoinIndex >= 0) {
-					String joinIndexType = queryPlan.get("joinindex").get(indexAtJoinIndex + 1);
-					s += "(" + joinIndexType + " on " + table + ")";
-				} else {
-					s += "(scan " + table + ")";
-				}
+		          int indexAtJoinIndex = queryPlan.get("joinindex").indexOf(table);
+		          
+		          if (indexAtJoinIndex < 0) {
+		            s += "(scan " + table + ")";
+		            s += " " + queryPlan.get("join").get(i) + " ";
+		            continue;
+		          }
+		            
+		          else {
+			          String joinIndexType = queryPlan.get("joinindex").get(indexAtJoinIndex + 1);
+			          s += "(" + joinIndexType + " on " + table + ")";
+			          if (i != queryPlan.get("table").size()-1)
+			        	  s += " " + queryPlan.get("join").get(i) + " ";
+	//		                "(scan " + table + " (" + joinIndexType + ")";            
+			          iJoinIndex += 1;
+			          continue;
+		          }
+		        } else {
+		          s += "(scan " + table + ")";
+		          if (i != queryPlan.get("table").size()-1) {
+		            s += " " + queryPlan.get("join").get(i) + " ";
+		          }
+		        }
 			}
 			s += "] ";
 			
@@ -186,14 +204,17 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		//Else there is no join predicate
 		//select majorid, studentid from enroll, student where majorid > 10;
 		else {
+			s += "[";
 			for(int i = 0; i < queryPlan.get("table").size(); i++) {
-				if(!queryPlan.get("index").isEmpty()) {
-					String fldname = queryPlan.get("index").get(i*2);
-					String indexType = queryPlan.get("index").get((i*2)+1);
-//					System.out.println(indexType);
-//queryplan.index (majorid, sid)
-					if(indexType != "empty") {
-						s += "(" + indexType + " index on " + fldname + ")";
+				if(!queryPlan.get("selectindex").isEmpty()) {
+					String fldname;
+					try {
+						fldname = queryPlan.get("selectindex").get(i);
+					} catch (IndexOutOfBoundsException e) {
+						fldname = null;
+					}
+					if(fldname != null) {
+						s += "(" + fldname + " index on " + queryPlan.get("table").get(i) + ")";
 					} else {
 						s += "(scan " + queryPlan.get("table").get(i) + ")";
 					}
@@ -214,6 +235,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 					}
 				}
 			}
+			s += "]";
 		}
 		
 		System.out.println(s);
@@ -248,6 +270,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 //			}
 //		}
 		queryPlan.computeIfAbsent("table", k -> new ArrayList<>()).add(besttp.myplan.tblname);
+		
 		tableplanners.remove(besttp);
 		return bestplan;
 	}
@@ -279,9 +302,16 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			if (tp.mypred.terms.size() > 0 && tp.mypred.terms.get(0).operator().equals("=")) {
 				currentplan = compare(indexPlan, sortMergePlan, nestedLoopPlan, hashJoinPlan, productPlan, tp);
 			}				
-			else {// if non-equi join{ bestplan = nestedloopplan}
+			else if (tp.mypred.terms.size() > 0){// if non-equi join{ bestplan = nestedloopplan}
 				currentplan = nestedLoopPlan;
 				queryPlan.computeIfAbsent("join", k -> new ArrayList<>()).add("NestedLoopsJoin with " + tp.myplan.tblname);
+				queryPlan.computeIfAbsent("table", k -> new ArrayList<>()).add(tp.myplan.tblname);
+			}
+			else {
+				System.out.println("here");
+				currentplan = productPlan;
+				queryPlan.computeIfAbsent("join", k -> new ArrayList<>()).add("ProductPlanJoin with " + tp.myplan.tblname);
+				queryPlan.computeIfAbsent("table", k -> new ArrayList<>()).add(tp.myplan.tblname);
 			}
 			
 			
@@ -308,7 +338,6 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			
 			if (queryPlan.containsKey("join") && queryPlan.get("join").get(queryPlan.get("join").size()-1).contains("Index")) {
 				
-				System.out.println(besttp.getIndexUsedFromJoin().keySet());
 				for (String i : besttp.getIndexUsedFromJoin().keySet()) {
 					queryPlan.computeIfAbsent("joinindex", k -> new ArrayList<>()).add(i);
 					queryPlan.computeIfAbsent("joinindex", k -> new ArrayList<>()).add(besttp.getIndexUsedFromJoin().get(i));
@@ -351,6 +380,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			queryPlan.computeIfAbsent("join", k -> new ArrayList<>()).add("HashJoin with " + tp.myplan.tblname);
 		} else {
 			queryPlan.computeIfAbsent("join", k -> new ArrayList<>()).add("ProductPlanJoin with " + tp.myplan.tblname);
+			
 		}
 		queryPlan.computeIfAbsent("table", k -> new ArrayList<>()).add(tp.myplan.tblname);
 		return lowestJoinPlan.get(lowestIndex);
@@ -365,6 +395,8 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 				besttp = tp;
 				bestplan = plan;
 				queryPlan.computeIfAbsent("join", k -> new ArrayList<>()).add("ProductPlanJoin");
+//				System.out.println("here");
+//				queryPlan.computeIfAbsent("table", k -> new ArrayList<>()).add(tp.myplan.tblname);
 			}
 		}
 		tableplanners.remove(besttp);
