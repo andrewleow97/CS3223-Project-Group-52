@@ -67,14 +67,13 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		// Step 3: Repeatedly add a plan to the join order
 		while (!tableplanners.isEmpty()) {
 			Plan p = getLowestJoinPlan(currentplan);
-//			System.out.println(p.schema().fields());
 			if (p != null)
 				currentplan = p;
 			else // no applicable join
 				currentplan = getLowestProductPlan(currentplan);
 		}
 		System.out.println(queryPlan.toString());
-
+		
 		// Step 4. Project on the field names and return
 		currentplan = new ProjectPlan(currentplan, data.fields());
 
@@ -88,6 +87,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		}
 		
 		getQueryPlan();
+		
 		
 		// Step 6. Sort the final plan node w/ distinct support
 		if (data.sortFields() == null || data.sortFields().isEmpty()) {
@@ -123,6 +123,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 	}
 
 	private void getQueryPlan() {
+		int iJoinIndex = 0;
 		String s = "";
 		s += "select ";
 		
@@ -137,26 +138,42 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		}
 		if (queryPlan.get("jpred").size() != 0) {
 			s += " [";
+			
 			for(int i = 0; i < queryPlan.get("table").size(); i++) {
 				String table = queryPlan.get("table").get(i);
 				//If there is no index used at all
 				//TODO: reformat how to decide if its selection or join
-				try {
-					String fldname = queryPlan.get("index").get(i*2);
-					String indexType = queryPlan.get("index").get((i*2)+1);
-					System.out.println(table + " " + fldname + " " + indexType);
-					if(indexType != "empty") {
-						s += "(" + indexType + " index on " + table + ")";
-					} else {
-						s += "(scan " + table + ")";
-					}
-				} catch (IndexOutOfBoundsException e) {
-					s += "(scan " + table + ")";
-				}
+					iJoinIndex %= 2;
 				
 				//if is not the last table
 				if (i != queryPlan.get("table").size()-1) {
-					s += " " + queryPlan.get("join").get(i) + " ";
+
+					if (queryPlan.get("join").get(iJoinIndex).contains("Index")) {
+
+						int indexAtJoinIndex = queryPlan.get("joinindex").indexOf(table);
+						if (indexAtJoinIndex < 0) {
+							s += "(scan " + table + ")";
+							s += " " + queryPlan.get("join").get(i) + " ";
+							continue;
+						}
+							
+						else {
+						String joinIndexType = queryPlan.get("joinindex").get(indexAtJoinIndex + 1);
+						s += "(" + joinIndexType + " on " + table + ")";
+						s += " " + queryPlan.get("join").get(i) + " ";
+//								"(scan " + table + " (" + joinIndexType + ")";						
+						iJoinIndex += 1;
+						continue;
+						}
+					}
+					
+				}
+				int indexAtJoinIndex = queryPlan.get("joinindex").indexOf(table);
+				if (indexAtJoinIndex >= 0) {
+					String joinIndexType = queryPlan.get("joinindex").get(indexAtJoinIndex + 1);
+					s += "(" + joinIndexType + " on " + table + ")";
+				} else {
+					s += "(scan " + table + ")";
 				}
 			}
 			s += "] ";
@@ -211,7 +228,6 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			if (bestplan == null || plan.recordsOutput() < bestplan.recordsOutput()) {
 				//If the index is not in the join pred. cause we dw it to remove, wanna have it for index join.
 				//if(!queryPlan.get("jpred").get(0).contains(indexUsed.get(0)) ) {
-					System.out.println(tp.getIndexUsedSelectPlan());
 					besttp = tp;
 					bestplan = plan;
 				//}
@@ -289,7 +305,10 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			}
 		}
 		if (bestplan != null) {// update queryplan (move all the add join to queryplan logic here)
-			if (queryPlan.get("join").get(queryPlan.get("join").size()-1).contains("Index")) {
+			
+			if (queryPlan.containsKey("join") && queryPlan.get("join").get(queryPlan.get("join").size()-1).contains("Index")) {
+				
+				System.out.println(besttp.getIndexUsedFromJoin().keySet());
 				for (String i : besttp.getIndexUsedFromJoin().keySet()) {
 					queryPlan.computeIfAbsent("joinindex", k -> new ArrayList<>()).add(i);
 					queryPlan.computeIfAbsent("joinindex", k -> new ArrayList<>()).add(besttp.getIndexUsedFromJoin().get(i));

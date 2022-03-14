@@ -131,12 +131,13 @@ class TablePlanner {
 	private Plan makeIndexSelect() {
 		storeIndexSelectPlan = new HashMap<String, String>();
 		for (String fldname : indexes.keySet()) {
-//			System.out.println(fldname);
-//			System.out.println(mypred);
 			Constant val = mypred.equatesWithConstant(fldname);
-			System.out.println("value" + val);
 			if (val != null) {
 				IndexInfo ii = indexes.get(fldname);
+				if (!mypred.terms.get(0).operator().equals("=") && ii.getIndexType().contains("hash")) {
+					System.out.println("hash index incompatible with range query");
+					return null;
+				}
 				storeIndexSelectPlan.put(myplan.tblname, fldname + "(" + ii.getIndexType() + ")");
 				System.out.println("index on " + fldname + " used");
 				return new IndexSelectPlan(myplan, ii, val);

@@ -20,8 +20,9 @@ public class ProjectPlan implements Plan {
     */
    public ProjectPlan(Plan p, List<String> fieldlist) {
       this.p = p;
-      for (String fldname : fieldlist)
+      for (String fldname : fieldlist) {
          schema.add(fldname, p.schema());
+      }
    }
 
    /**
@@ -30,6 +31,7 @@ public class ProjectPlan implements Plan {
     */
    public Scan open() {
       Scan s = p.open();
+      
       return new ProjectScan(s, schema.fields());
    }
 

@@ -49,7 +49,7 @@ public class IndexInfo {
     * @return the Index object associated with this information
     */
    public Index open() {
-	if (this.indexType == "hash") {   
+	if (this.indexType.equals("hash")) {   
 		return new HashIndex(tx, idxname, idxLayout);
 	} else {
 		return new BTreeIndex(tx, idxname, idxLayout);
