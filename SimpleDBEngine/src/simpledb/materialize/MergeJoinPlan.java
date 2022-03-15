@@ -7,6 +7,8 @@ import simpledb.record.*;
 
 import java.util.*;
 
+import java.lang.Math;
+
 /**
  * The Plan class for the <i>mergejoin</i> operator.
  * @author Edward Sciore
@@ -15,6 +17,7 @@ public class MergeJoinPlan implements Plan {
    private Plan p1, p2;
    private String fldname1, fldname2;
    private Schema sch = new Schema();
+   private Transaction tx;
    
    /**
     * Creates a mergejoin plan for the two specified queries.
@@ -27,6 +30,7 @@ public class MergeJoinPlan implements Plan {
     * @param tx the calling transaction
     */
    public MergeJoinPlan(Transaction tx, Plan p1, Plan p2, String fldname1, String fldname2) {
+	  this.tx = tx;
       this.fldname1 = fldname1;
       List<String> sortlist1 = Arrays.asList(fldname1);
       this.p1 = new SortPlan(tx, p1, sortlist1);
@@ -62,7 +66,18 @@ public class MergeJoinPlan implements Plan {
     * @see simpledb.plan.Plan#blocksAccessed()
     */
    public int blocksAccessed() {
-      return p1.blocksAccessed() + p2.blocksAccessed();
+	   double R_B = Math.ceil((double) p1.blocksAccessed()/tx.availableBuffs());
+	   double top1 = Math.log(R_B);
+	   double bottom1 = Math.log(tx.availableBuffs()-1);
+	   int val1 = (int) Math.ceil(top1/bottom1);
+	   int p1cost =  2 * p1.blocksAccessed() * (1+val1);
+	   
+	   double S_B = Math.ceil((double) p2.blocksAccessed()/tx.availableBuffs());
+	   double top2 = Math.log(S_B);
+	   double bottom2 = Math.log(tx.availableBuffs()-1);
+	   int val2 = (int) Math.ceil(top2/bottom2);
+	   int p2cost =  2 * p2.blocksAccessed() * (1+val2);
+      return (p1cost + p2cost) + (p1.blocksAccessed() + p2.blocksAccessed()); // cost of sort phase + cost of merge
    }
    
    /**
