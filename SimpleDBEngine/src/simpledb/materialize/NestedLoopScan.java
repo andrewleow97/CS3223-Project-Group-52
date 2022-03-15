@@ -12,8 +12,8 @@ import simpledb.record.RID;
  * @author Edward Sciore
  */
 public class NestedLoopScan implements Scan {
-	private UpdateScan s1;
-	private UpdateScan s2;
+	private Scan s1;
+	private Scan s2;
 	private String fldname1, fldname2, opr;
 	boolean hasmore1, hasmore2;
 	private List<RID> savedposition = null;
@@ -27,8 +27,8 @@ public class NestedLoopScan implements Scan {
 	 * @param fldname2 the RHS join field
 	 */
 	public NestedLoopScan(Scan s1, Scan s2, String fldname1, String fldname2, String opr) {
-		this.s1 = (UpdateScan) s1;
-		this.s2 = (UpdateScan) s2;
+		this.s1 = s1;
+		this.s2 = s2;
 		this.fldname1 = fldname1;
 		this.fldname2 = fldname2;
 		this.opr = opr;
@@ -55,7 +55,6 @@ public class NestedLoopScan implements Scan {
 		s1.beforeFirst();
 		s2.beforeFirst();
 		hasmore1 = s1.next();
-		hasmore2 = s2.next();
 	}
 
 	public boolean joinCondition(Constant v1, Constant v2, String opr) {
@@ -79,82 +78,69 @@ public class NestedLoopScan implements Scan {
 		}
 	}
 
-	public void savePosition() {
-		RID rid1 = (s1 == null) ? null : s1.getRid();
-		RID rid2 = (s2 == null) ? null : s2.getRid();
-		savedposition = Arrays.asList(rid1, rid2);
-	}
-
-	public void restorePosition() {
-		RID rid1 = savedposition.get(0);
-		if (rid1 != null) {
-			s1.moveToRid(rid1);
-		}
-		RID rid2 = savedposition.get(1);
-		if (rid2 != null)
-			s2.moveToRid(rid2);
-	}
-
 	/**
-    * Move to the next record.  This is where the action is.
-    * <P>
-    * If the next RHS record has the same join value,
-    * then move to it.
-    * Otherwise, if the next LHS record has the same join value,
-    * then reposition the RHS scan back to the first record
-    * having that join value.
-    * Otherwise, repeatedly move the scan until a common join value is found.
-    * When one of the scans runs out of records, return false.
-    * @see simpledb.query.Scan#next()
-    */
-   public boolean next() {	   
-	   if (!hasmore1 && !hasmore2) {
-		   return false;
-	   }
-	   if (savedposition != null) {
-		   restorePosition();
-		   hasmore2 = s2.next();
-		   while (hasmore2) {
-			   Constant v1 = s1.getVal(fldname1);
-			   Constant v2 = s2.getVal(fldname2);
-			   if (joinCondition(v1, v2, this.opr)) {
-	 			  savePosition();
-	              return true;
-			   } else {
-				   break;
-			   }
-		   }
-		   s2.beforeFirst();
-		   hasmore2 = s2.next();
-		   savedposition = null;
-		   hasmore1 = s1.next();
-	   }
-	   while (hasmore1) {
-           Constant v1 = s1.getVal(fldname1);
-           while (hasmore2) {
-               Constant v2 = s2.getVal(fldname2);
-    		  if (joinCondition(v1, v2, this.opr)) {
-    			  savePosition();
-                  return true;
-              }
-    		  hasmore2 = s2.next();
-           }
-           s2.beforeFirst();
-           savedposition = null;
-           hasmore1 = s1.next();
-       }
-	   return false;
-//	   while (true) {
-//		   while (s2.next()) {
-//			   
-//			   if (s1.getVal(fldname1).equals(s2.getVal(fldname2)))
-//				   return true;
+	 * Move to the next record. This is where the action is.
+	 * <P>
+	 * If the next RHS record has the same join value, then move to it. Otherwise,
+	 * if the next LHS record has the same join value, then reposition the RHS scan
+	 * back to the first record having that join value. Otherwise, repeatedly move
+	 * the scan until a common join value is found. When one of the scans runs out
+	 * of records, return false.
+	 * 
+	 * @see simpledb.query.Scan#next()
+	 */
+	public boolean next() {
+//	   if (!hasmore1 && !hasmore2) {
+//		   return false;
+//	   }
+//	   if (savedposition != null) {
+//		   restorePosition();
+//		   hasmore2 = s2.next();
+//		   while (hasmore2) {
+//			   Constant v1 = s1.getVal(fldname1);
+//			   Constant v2 = s2.getVal(fldname2);
+//			   if (joinCondition(v1, v2, this.opr)) {
+//	 			  savePosition();
+//	              return true;
+//			   } else {
+//				   break;
+//			   }
 //		   }
 //		   s2.beforeFirst();
-//		   if (!s1.next())
-//			   return false;
+//		   hasmore2 = s2.next();
+//		   savedposition = null;
+//		   hasmore1 = s1.next();
 //	   }
-   }
+//	   while (hasmore1) {
+//           Constant v1 = s1.getVal(fldname1);
+//           while (hasmore2) {
+//               Constant v2 = s2.getVal(fldname2);
+//    		  if (joinCondition(v1, v2, this.opr)) {
+//    			  savePosition();
+//                  return true;
+//              }
+//    		  hasmore2 = s2.next();
+//           }
+//           s2.beforeFirst();
+//           savedposition = null;
+//           hasmore1 = s1.next();
+//       }
+//	   return false;
+		while (hasmore1) {
+			while (hasmore2 = s2.next()) {
+				Constant v1 = s1.getVal(fldname1);
+				Constant v2 = s2.getVal(fldname2);
+//				System.out.println(v1 + " " + v2);
+				if (joinCondition(v1, v2, this.opr)) {
+					return true;
+				}
+			}
+			s2.beforeFirst();
+			hasmore1 = s1.next();
+		}
+
+		return false;
+	}
 
 	/**
 	 * Return the integer value of the specified field. The value is obtained from
