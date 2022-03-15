@@ -90,47 +90,11 @@ public class NestedLoopScan implements Scan {
 	 * @see simpledb.query.Scan#next()
 	 */
 	public boolean next() {
-//	   if (!hasmore1 && !hasmore2) {
-//		   return false;
-//	   }
-//	   if (savedposition != null) {
-//		   restorePosition();
-//		   hasmore2 = s2.next();
-//		   while (hasmore2) {
-//			   Constant v1 = s1.getVal(fldname1);
-//			   Constant v2 = s2.getVal(fldname2);
-//			   if (joinCondition(v1, v2, this.opr)) {
-//	 			  savePosition();
-//	              return true;
-//			   } else {
-//				   break;
-//			   }
-//		   }
-//		   s2.beforeFirst();
-//		   hasmore2 = s2.next();
-//		   savedposition = null;
-//		   hasmore1 = s1.next();
-//	   }
-//	   while (hasmore1) {
-//           Constant v1 = s1.getVal(fldname1);
-//           while (hasmore2) {
-//               Constant v2 = s2.getVal(fldname2);
-//    		  if (joinCondition(v1, v2, this.opr)) {
-//    			  savePosition();
-//                  return true;
-//              }
-//    		  hasmore2 = s2.next();
-//           }
-//           s2.beforeFirst();
-//           savedposition = null;
-//           hasmore1 = s1.next();
-//       }
-//	   return false;
+
 		while (hasmore1) {
 			while (hasmore2 = s2.next()) {
 				Constant v1 = s1.getVal(fldname1);
 				Constant v2 = s2.getVal(fldname2);
-//				System.out.println(v1 + " " + v2);
 				if (joinCondition(v1, v2, this.opr)) {
 					return true;
 				}
@@ -138,7 +102,6 @@ public class NestedLoopScan implements Scan {
 			s2.beforeFirst();
 			hasmore1 = s1.next();
 		}
-
 		return false;
 	}
 

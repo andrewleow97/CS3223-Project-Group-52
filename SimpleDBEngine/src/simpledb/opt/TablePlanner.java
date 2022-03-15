@@ -56,7 +56,6 @@ class TablePlanner {
 	 */
 	public Plan makeSelectPlan() {
 		Plan p = makeIndexSelect();
-//		Plan p = myplan;
 		if (p == null)
 			p = myplan;
 		return addSelectPred(p);
