@@ -58,7 +58,7 @@ public class IndexJoinTest {
 
 	private static void useIndexScan(Plan p1, Plan p2, IndexInfo ii, String joinfield) {
 		// Open an index join scan on the table.
-		Plan idxplan = new IndexJoinPlan(p1, p2, ii, joinfield);
+		Plan idxplan = new IndexJoinPlan(p1, p2, ii, joinfield, "=");
 		Scan s = idxplan.open();
 
 		while (s.next()) {

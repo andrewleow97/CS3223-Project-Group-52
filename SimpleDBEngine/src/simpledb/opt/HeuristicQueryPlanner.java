@@ -17,9 +17,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 	private Collection<TablePlanner> tableplanners = new ArrayList<>();
 	private MetadataMgr mdm;
 	private HashMap<String, ArrayList<String>> queryPlan = new HashMap<>();
-	private HashMap<String, String> joinIndex = new HashMap<>();
-	private HashMap<String, String> selectIndex = new HashMap<>();
-	
+	private int counter = 1;
 	public HeuristicQueryPlanner(MetadataMgr mdm) {
 		this.mdm = mdm;
 	}
@@ -31,10 +29,8 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 	 * smallest output.
 	 */
 	public Plan createPlan(QueryData data, Transaction tx) {
+		counter = 3;
 		queryPlan = new HashMap<>();
-//		for(String table: data.tables()) {
-//			queryPlan.computeIfAbsent("table", k -> new ArrayList<>()).add(table);
-//		}
 		queryPlan.computeIfAbsent("spred", k -> new ArrayList<>());
 		queryPlan.computeIfAbsent("jpred", k -> new ArrayList<>());
 		queryPlan.computeIfAbsent("join", k -> new ArrayList<>());
@@ -68,6 +64,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		// Step 3: Repeatedly add a plan to the join order
 		while (!tableplanners.isEmpty()) {
 			Plan p = getLowestJoinPlan(currentplan);
+			counter += 1;
 			if (p != null)
 				currentplan = p;
 			else // no applicable join
@@ -99,24 +96,6 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 				// eliminate duplicates
 				currentplan = new DistinctPlan(tx, currentplan, data.fields());
 			}
-//			try {System.out.println("here");
-//			Scan s = currentplan.open();
-//			System.out.println("here");
-//			s.beforeFirst();
-//			
-//			boolean hasnext = true;
-//			while (hasnext) {
-//				for (String fldname : currentplan.schema().fields())
-//					try {
-//						Constant c = s.getVal(fldname);
-//						System.out.println(c);
-//					} catch (NullPointerException e) {
-//						System.out.println("s is empty");
-//					}
-//				hasnext = s.next();
-//			}
-//			} catch (Exception e) {
-//			}
 			return currentplan;
 		}
 
@@ -162,7 +141,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			for(int i = 0; i < queryPlan.get("table").size(); i++) {
 				String table = queryPlan.get("table").get(i);
 		        //If there is no index used at all
-		        //TODO: reformat how to decide if its selection or join
+
 		          iJoinIndex %= 2;
 		        
 		        //if is not the last table
@@ -181,8 +160,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			          String joinIndexType = queryPlan.get("joinindex").get(indexAtJoinIndex + 1);
 			          s += "(" + joinIndexType + " on " + table + ")";
 			          if (i != queryPlan.get("table").size()-1)
-			        	  s += " " + queryPlan.get("join").get(i) + " ";
-	//		                "(scan " + table + " (" + joinIndexType + ")";            
+			        	  s += " " + queryPlan.get("join").get(i) + " ";       
 			          iJoinIndex += 1;
 			          continue;
 		          }
@@ -247,11 +225,9 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			Plan plan = tp.makeSelectPlan();
 
 			if (bestplan == null || plan.recordsOutput() < bestplan.recordsOutput()) {
-				//If the index is not in the join pred. cause we dw it to remove, wanna have it for index join.
-				//if(!queryPlan.get("jpred").get(0).contains(indexUsed.get(0)) ) {
 					besttp = tp;
 					bestplan = plan;
-				//}
+
 			}
 		}			
 		HashMap<String, String> indexUsed = new HashMap<>();
@@ -260,14 +236,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			queryPlan.computeIfAbsent("selectindex", k -> new ArrayList<>()).add(i);
 			queryPlan.computeIfAbsent("selectindex", k -> new ArrayList<>()).add(indexUsed.get(i));
 		}
-//		ArrayList<String> indexUsed = besttp.getIndexUsedSelectPlan();
-//		if (indexUsed.size() != 0) {
-//			for (int i = 0; i < indexUsed.size()/2; i++) {
-//				
-//				queryPlan.computeIfAbsent("index", k -> new ArrayList<>()).add(indexUsed.get(i*2).toString());
-//				queryPlan.computeIfAbsent("index", k -> new ArrayList<>()).add(indexUsed.get(i*2 + 1).toString());
-//			}
-//		}
+
 		queryPlan.computeIfAbsent("table", k -> new ArrayList<>()).add(besttp.myplan.tblname);
 		
 		tableplanners.remove(besttp);
@@ -281,17 +250,6 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		for (TablePlanner tp : tableplanners) {
 			
 			Plan indexPlan = tp.makeIndexJoinPlan(current);
-			//If there is an index used.
-//			if (indexPlan != null) {
-//				for(int i = 0; i < queryPlan.get("index").size(); i++) {
-////					[section, enroll indexjoin]
-////					index:[null, no index, hash on enroll]
-//					
-//					if (tp.getIndexUsedFromJoin().get(0) == queryPlan.get("index").get(i)) {
-//						queryPlan.get("index").set(i+1, tp.getIndexUsedFromJoin().get(1));
-//					}
-//				}
-//			}
 			Plan sortMergePlan = tp.makeSortMergePlan(current);
 			Plan nestedLoopPlan = tp.makeNestedLoopPlan(current);
 			Plan hashJoinPlan = tp.makeHashJoinPlan(current);
@@ -299,6 +257,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			// TODO: If all plans are null, default the best plan to product plan.
 			if (tp.mypred.terms.size() > 0 && tp.mypred.terms.get(0).operator().equals("=")) {
 				currentplan = compare(indexPlan, sortMergePlan, nestedLoopPlan, hashJoinPlan, productPlan, tp);
+
 			}				
 			else if (tp.mypred.terms.size() > 0){// if non-equi join{ bestplan = nestedloopplan}
 				currentplan = nestedLoopPlan;
@@ -306,14 +265,13 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 				queryPlan.computeIfAbsent("table", k -> new ArrayList<>()).add(tp.myplan.tblname);
 			}
 			else {
-				currentplan = productPlan;
+				currentplan = tp.makeDefaultProductPlan(current);
 				queryPlan.computeIfAbsent("join", k -> new ArrayList<>()).add("ProductPlanJoin with " + tp.myplan.tblname);
 				queryPlan.computeIfAbsent("table", k -> new ArrayList<>()).add(tp.myplan.tblname);
 			}
 
 			
 			if (currentplan != null) {
-//				System.out.println(queryPlan.get("join"));
 				if (bestplan == null) {
 					bestplan = currentplan;
 					besttp = tp;
@@ -369,8 +327,8 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		List<Integer> lowestJoinBlocks = new ArrayList<>(Arrays.asList(indexblocks, sortblocks, nestedblocks, hashblocks, productblocks));
 		List<Plan> lowestJoinPlan = new ArrayList<>(Arrays.asList(index, sortmerge, nested, hash, product));
 		int lowestIndex = lowestJoinBlocks.indexOf(Collections.min(lowestJoinBlocks));
-		lowestIndex=2;
-
+//		lowestIndex = counter;
+//		lowestIndex %= 5;
 		if(lowestIndex == 0) {
 			queryPlan.computeIfAbsent("join", k -> new ArrayList<>()).add("IndexBasedJoin with " + tp.myplan.tblname);
 			// add table w/ joinindex
@@ -397,8 +355,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 				besttp = tp;
 				bestplan = plan;
 				queryPlan.computeIfAbsent("join", k -> new ArrayList<>()).add("ProductPlanJoin");
-//				System.out.println("here");
-//				queryPlan.computeIfAbsent("table", k -> new ArrayList<>()).add(tp.myplan.tblname);
+
 			}
 		}
 		tableplanners.remove(besttp);

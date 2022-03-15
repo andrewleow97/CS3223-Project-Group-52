@@ -11,7 +11,7 @@ public class SimpleIJ {
       System.out.println("Connect> ");
       String s = sc.nextLine();
       Driver d = (s.contains("//")) ? new NetworkDriver() : new EmbeddedDriver();
-
+      long startTime = 0, stopTime;
       try (Connection conn = d.connect(s, null);
            Statement stmt = conn.createStatement()) {
          System.out.print("\nSQL> ");
@@ -20,10 +20,15 @@ public class SimpleIJ {
             String cmd = sc.nextLine().trim();
             if (cmd.startsWith("exit"))
                break;
-            else if (cmd.startsWith("select"))
+            else if (cmd.startsWith("select")) {
+            	startTime = System.currentTimeMillis();
                doQuery(stmt, cmd);
+            }
             else
                doUpdate(stmt, cmd);
+            //stop timer
+            stopTime = System.currentTimeMillis();
+            System.out.println((stopTime - startTime) + " in milliseconds");
             System.out.print("\nSQL> ");
          }
       }
