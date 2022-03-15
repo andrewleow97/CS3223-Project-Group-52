@@ -53,6 +53,7 @@ public class TableScan implements UpdateScan {
    }
 
    public Constant getVal(String fldname) {
+	   
       if (layout.schema().type(fldname) == INTEGER)
          return new Constant(getInt(fldname));
       else

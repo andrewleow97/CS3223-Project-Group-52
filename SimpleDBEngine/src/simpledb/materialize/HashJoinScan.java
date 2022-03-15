@@ -45,7 +45,7 @@ public class HashJoinScan implements Scan {
 		this.fldname1 = fldname1;
 		this.fldname2 = fldname2;
 		this.tx = tx;
-		this.hashval = tx.availableBuffs();
+		this.hashval = tx.availableBuffs() - 2;
 		this.keyIndex = 0;
 		this.keys = new ArrayList<>(p1.keySet());
 		this.sch = sch;
@@ -56,56 +56,45 @@ public class HashJoinScan implements Scan {
 			TempTable currenttemp = new TempTable(tx, sch);
 			h1.put(i, currenttemp);
 		}
-		rehash();
 		// rehashing p1 into h1 by scanning partition p1 and adding its vals to
 		// temptables in h1 by new hash
 		this.keyIndex = 0;
+		rehash();
 		this.s2 = (UpdateScan) p2.get(this.keyIndex).open(); // starting at bucket 0
 		beforeFirst();
 	}
 
-	
-	public void rehash() {
-		while (this.keyIndex <= hashval) {
-	        int key = this.keys.get(this.keyIndex);
-	        int hash1 = 0;
-	        // getting temptable from partition 1 in hashtable
-	        TempTable p1 = this.p1.get(key);
-	        UpdateScan tempscan = p1.open();
-	        tempscan.beforeFirst();
+	public void rehash() { // rehash partition of p1 per bucket @ this.keyindex
 
-	        boolean hasmore = tempscan.next();	        
-	        if (!hasmore) {
-	            this.keyIndex += 1;
-	            tempscan.close();
-	            continue;
-	        }
-	        while (hasmore) {
-	            try {
-	                int joinval1 = tempscan.getInt(fldname1);
-	                hash1 = joinval1 % hashval;
-	    
-	            } catch (NumberFormatException e) { // not an int
-	                String joinval1 = tempscan.getString(fldname1);
-	                hash1 = ((joinval1 == null) ? 0 : joinval1.hashCode()) % hashval;
-	    
-	            }
+		// getting temptable from partition 1 in hashtable
+//		System.out.println("rehash -> " + this.keyIndex);
+		TempTable p1 = this.p1.get(this.keyIndex);
+		UpdateScan tempscan = p1.open();
+		tempscan.beforeFirst();
+		boolean hasmore;
+		int hash1 = 0;
+		while (hasmore = tempscan.next()) { // while there are values in this partition
+			try {
+				int joinval1 = tempscan.getInt(fldname1);
+				hash1 = joinval1 % hashval;
 
-	            // transferring all data @ current tempscan of p1 into h1 
-	            UpdateScan currscan = h1.get(hash1).open();
-	            
-	            currscan.insert();
-	            for (String fldname : p1.getLayout().schema().fields()) {
-	                currscan.setVal(fldname, tempscan.getVal(fldname));
+			} catch (NumberFormatException e) { // not an int
+				String joinval1 = tempscan.getString(fldname1);
+				hash1 = ((joinval1 == null) ? 0 : joinval1.hashCode()) % hashval;
 
-	            }
-	            currscan.close();
-	            hasmore = tempscan.next();
-	        }
-	        tempscan.close();
-	        this.keyIndex += 1;
-	    }
-	    return;
+			}
+
+			// transferring all data @ current tempscan of p1 into h1
+			UpdateScan currscan = h1.get(hash1).open();
+			currscan.insert();
+			for (String fldname : p1.getLayout().schema().fields()) {
+				currscan.setVal(fldname, tempscan.getVal(fldname));
+
+			}
+			currscan.close();
+		}
+		tempscan.close();
+		return;
 	}
 
 	/**
@@ -158,81 +147,172 @@ public class HashJoinScan implements Scan {
 	 * 
 	 * @see simpledb.query.Scan#next()
 	 */
-	
-	public boolean next() {
-	    /**
-	     * 1. TAKE IN ENTIRE REHASHED HASHMAP OF S1 AND SCAN S2 OF PARTITION K OF S2 2.
-	     * FOR EACH VALUE OF S2, REHASH IT, CHECK IF HASH VALUE IN HASHMAP OF S1 3. IF
-	     * MATCH, OPEN SCAN ON HASHMAP(KEY) 4. JOIN BASED ON FLDNAME1 AND FLDNAME2,
-	     * RETURN TRUE + SAVE POSITION IF MATCH ELSE INCREMENT S1.NEXT() 5. WHEN
-	     * S1.NEXT() IS NULL, S2.NEXT() 6. WHEN S2.NEXT() IS NULL RETURN FALSE
-	     */
-	    while (this.keyIndex <= hashval) {
-	        if (savedposition != null) {
-	            restorePosition();
-	        } else {
-	            s2.beforeFirst();
-	        }
-	        boolean hasmore2 = this.s2.next();
-	        int hash2 = 0;
-	        if (!hasmore2) {
-	            this.keyIndex += 1;
-	            this.s2.close();
-		        if (this.keyIndex <= hashval) {
-		        	this.s2 = (UpdateScan) this.p2.get(this.keyIndex).open();
-		        	this.s2.beforeFirst();
-		        }
-		        this.savedposition = null;
-	            continue;
-	        }
-	        while (hasmore2) {
-	            try {
-	                int joinval2 = s2.getInt(fldname2);
-	                hash2 = joinval2 % hashval;
-	    
-	            } catch (NumberFormatException e) { // not an int
-	                String joinval2 = s2.getString(fldname2);
-	                hash2 = ((joinval2 == null) ? 0 : joinval2.hashCode()) % hashval;
-	    
-	            }
-	            
-	            if (h1.containsKey(hash2)) {
-	                this.s1 = h1.get(hash2).open();
-	                this.s1.beforeFirst();
-	                boolean hasmore1 = s1.next();
-	                if (!hasmore1) {
-	                    s1.close();
-	                    continue;
-	                }
-	                while (hasmore1) {
-	                    if (this.s1.getVal(fldname1).compareTo(this.s2.getVal(fldname2)) == 0) { // match on joinval
-//	                        // need to copy in the values
-	                    	for (String field : this.p2.get(this.keyIndex).getLayout().schema().fields()) {
-	                    		this.s1.setVal(field, this.s2.getVal(field));
-	                    	}
 
-	                        savePosition();
-	                        return true;
-	                    }
-	                    hasmore1 = s1.next();
-	                }
-	                this.s1.close();
-	            }
-	            hasmore2 = s2.next();
+	public boolean next() {
+		/**
+		 * 1. TAKE IN ENTIRE REHASHED HASHMAP OF S1 AND SCAN S2 OF PARTITION K OF S2 2.
+		 * FOR EACH VALUE OF S2, REHASH IT, CHECK IF HASH VALUE IN HASHMAP OF S1 3. IF
+		 * MATCH, OPEN SCAN ON HASHMAP(KEY) 4. JOIN BASED ON FLDNAME1 AND FLDNAME2,
+		 * RETURN TRUE + SAVE POSITION IF MATCH ELSE INCREMENT S1.NEXT() 5. WHEN
+		 * S1.NEXT() IS NULL, S2.NEXT() 6. WHEN S2.NEXT() IS NULL RETURN FALSE
+		 */
+//		keyindex = 0 1 2 3 4 5 6
+//		h1 = [0 1 2 3 4 5]
+		
+		// p1 bucket 0 -> 3
+		// p2 bucket 0 -> calculate hash2 = 3 -> open h1 partition 3 and return true
+		while (this.keyIndex <= hashval) { // starting is bucket 0 of p2 
+			if (savedposition != null) {
+	            restorePosition();
+				int hash2 = 0;
+				try {
+					int joinval2 = this.s2.getInt(fldname2);
+					hash2 = joinval2 % hashval;
+
+				} catch (NumberFormatException e) { // not an int
+					String joinval2 = this.s2.getString(fldname2);
+					hash2 = ((joinval2 == null) ? 0 : joinval2.hashCode()) % hashval;
+
+				}
+				
+				while (this.s1.next()) {
+                    if (this.s1.getVal(fldname1).compareTo(this.s2.getVal(fldname2)) == 0) { // match on joinval
+                        // need to copy in the values
+                    	for (String field : this.p2.get(this.keyIndex).getLayout().schema().fields()) {
+                    		this.s1.setVal(field, this.s2.getVal(field));
+                    	}
+                        savePosition();
+                        return true;
+
+                    }
+				}
+				this.s1.close();
 	        }
-	        this.s2.close();
-	        this.savedposition = null;
-	        this.keyIndex += 1;
-	        if (this.keyIndex <= hashval) {
-	        	this.s2 = (UpdateScan) this.p2.get(this.keyIndex).open();
-	        	this.s2.beforeFirst();
-	        	
-	        }
-	    }
-	    close();
-	    return false;
+			
+			boolean hasmore2;
+			while (hasmore2 = this.s2.next()) {
+				int hash2 = 0;
+				try {
+					int joinval2 = this.s2.getInt(fldname2);
+					hash2 = joinval2 % hashval;
+
+				} catch (NumberFormatException e) { // not an int
+					String joinval2 = this.s2.getString(fldname2);
+					hash2 = ((joinval2 == null) ? 0 : joinval2.hashCode()) % hashval;
+
+				}
+				
+				this.s1 = h1.get(hash2).open();
+				this.s1.beforeFirst();
+				boolean hasmore1;
+				while (hasmore1 = this.s1.next()) {
+//					System.out.println(fldname2 + " " + this.s2.getVal(fldname2));
+//					System.out.println(fldname1 + " " + this.s1.getVal(fldname1));
+//					if (this.s1.getVal(fldname1).compareTo(this.s2.getVal(fldname2)) == 0) {
+//						savePosition();
+//						
+//						return true;
+//					}
+					
+
+                    if (this.s1.getVal(fldname1).compareTo(this.s2.getVal(fldname2)) == 0) { // match on joinval
+                        // need to copy in the values
+                    	for (String field : this.p2.get(this.keyIndex).getLayout().schema().fields()) {
+                    		this.s1.setVal(field, this.s2.getVal(field));
+                    	}
+                        savePosition();
+                        return true;
+
+                    }
+				}
+				this.s1.close();
+			}
+			this.s2.close();
+			//clear h1
+			this.h1.clear();
+			for (int i = 0; i < hashval; i++) {
+				TempTable currenttemp = new TempTable(tx, sch);
+				h1.put(i, currenttemp);
+			}
+			this.keyIndex += 1;
+			if (keyIndex > hashval) {
+				close();
+				return false;
+			}
+			this.savedposition = null;
+			rehash();
+			this.s2 = (UpdateScan) p2.get(this.keyIndex).open();
+			this.s2.beforeFirst();
+		}
+		close();
+		return false;
 	}
-	
+
+//	    while (this.keyIndex <= hashval) {
+//	        if (savedposition != null) {
+//	            restorePosition();
+//	        } else {
+//	            s2.beforeFirst();
+//	        }
+//	        boolean hasmore2 = this.s2.next();
+//	        int hash2 = 0;
+//	        if (!hasmore2) {
+//	            this.keyIndex += 1;
+//	            this.s2.close();
+//		        if (this.keyIndex <= hashval) {
+//		        	this.s2 = (UpdateScan) this.p2.get(this.keyIndex).open();
+//		        	this.s2.beforeFirst();
+//		        }
+//		        this.savedposition = null;
+//	            continue;
+//	        }
+//	        while (hasmore2 = s2.next()) {
+//	            try {
+//	                int joinval2 = s2.getInt(fldname2);
+//	                hash2 = joinval2 % hashval;
+//	    
+//	            } catch (NumberFormatException e) { // not an int
+//	                String joinval2 = s2.getString(fldname2);
+//	                hash2 = ((joinval2 == null) ? 0 : joinval2.hashCode()) % hashval;
+//	    
+//	            }
+//	            
+//	            if (h1.containsKey(hash2)) {
+//	                this.s1 = h1.get(hash2).open();
+//	                this.s1.beforeFirst();
+//	                boolean hasmore1 = s1.next();
+//	                if (!hasmore1) {
+//	                    s1.close();
+//	                    continue;
+//	                }
+//	                while (hasmore1) {
+//	                    if (this.s1.getVal(fldname1).compareTo(this.s2.getVal(fldname2)) == 0) { // match on joinval
+////	                        // need to copy in the values
+//	                    	for (String field : this.p2.get(this.keyIndex).getLayout().schema().fields()) {
+//	                    		this.s1.setVal(field, this.s2.getVal(field));
+//	                    	}
+//
+//	                        savePosition();
+//	                        return true;
+//	                    }
+//	                    hasmore1 = s1.next();
+//	                }
+//	                this.s1.close();
+//	            }
+//	        }
+//	        this.s2.close();
+//	        this.savedposition = null;
+//	        this.keyIndex += 1;
+//	        if (this.keyIndex <= hashval) {
+//	        	this.s2 = (UpdateScan) this.p2.get(this.keyIndex).open();
+//	        	this.s2.beforeFirst();
+//	        	
+//	        }
+//	    }
+//	    close();
+//	    return false;
+//	}
+
 	/**
 	 * Return the integer value of the specified field. The value is obtained from
 	 * whichever scan contains the field.

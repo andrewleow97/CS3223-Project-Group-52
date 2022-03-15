@@ -141,6 +141,7 @@ public class HashPartitionPlan implements Plan {
 			currscan.close();
 
 		}
+		src.close();
 		return temps;
 	}
 	

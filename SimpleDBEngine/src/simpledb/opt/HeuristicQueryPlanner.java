@@ -117,7 +117,6 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 //			}
 //			} catch (Exception e) {
 //			}
-//			
 			return currentplan;
 		}
 
@@ -297,7 +296,6 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			Plan nestedLoopPlan = tp.makeNestedLoopPlan(current);
 			Plan hashJoinPlan = tp.makeHashJoinPlan(current);
 			Plan productPlan = tp.makeDefaultProductPlan(current);
-
 			// TODO: If all plans are null, default the best plan to product plan.
 			if (tp.mypred.terms.size() > 0 && tp.mypred.terms.get(0).operator().equals("=")) {
 				currentplan = compare(indexPlan, sortMergePlan, nestedLoopPlan, hashJoinPlan, productPlan, tp);
@@ -308,12 +306,11 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 				queryPlan.computeIfAbsent("table", k -> new ArrayList<>()).add(tp.myplan.tblname);
 			}
 			else {
-				System.out.println("here");
 				currentplan = productPlan;
 				queryPlan.computeIfAbsent("join", k -> new ArrayList<>()).add("ProductPlanJoin with " + tp.myplan.tblname);
 				queryPlan.computeIfAbsent("table", k -> new ArrayList<>()).add(tp.myplan.tblname);
 			}
-			
+
 			
 			if (currentplan != null) {
 //				System.out.println(queryPlan.get("join"));
@@ -332,6 +329,9 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 					queryPlan.computeIfAbsent("table", k -> new ArrayList<>()).remove(queryPlan.get("table").size()-1);
 				}
 				
+			} else {
+				queryPlan.computeIfAbsent("join", k -> new ArrayList<>()).remove(queryPlan.get("join").size()-1);
+				queryPlan.computeIfAbsent("table", k -> new ArrayList<>()).remove(queryPlan.get("table").size()-1);
 			}
 		}
 		if (bestplan != null) {// update queryplan (move all the add join to queryplan logic here)
@@ -369,7 +369,8 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		List<Integer> lowestJoinBlocks = new ArrayList<>(Arrays.asList(indexblocks, sortblocks, nestedblocks, hashblocks, productblocks));
 		List<Plan> lowestJoinPlan = new ArrayList<>(Arrays.asList(index, sortmerge, nested, hash, product));
 		int lowestIndex = lowestJoinBlocks.indexOf(Collections.min(lowestJoinBlocks));
-		//lowestIndex = 3;
+		lowestIndex=2;
+
 		if(lowestIndex == 0) {
 			queryPlan.computeIfAbsent("join", k -> new ArrayList<>()).add("IndexBasedJoin with " + tp.myplan.tblname);
 			// add table w/ joinindex

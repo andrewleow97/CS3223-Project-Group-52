@@ -32,6 +32,7 @@ public class NestedLoopPlan implements Plan {
       this.p1 = p1;
       this.p2 = p2;
       this.opr = opr;
+
       sch.addAll(p1.schema());
       sch.addAll(p2.schema());
    }
