@@ -254,7 +254,6 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			Plan nestedLoopPlan = tp.makeNestedLoopPlan(current);
 			Plan hashJoinPlan = tp.makeHashJoinPlan(current);
 			Plan productPlan = tp.makeDefaultProductPlan(current);
-			// TODO: If all plans are null, default the best plan to product plan.
 			if (tp.mypred.terms.size() > 0 && tp.mypred.terms.get(0).operator().equals("=")) {
 				currentplan = compare(indexPlan, sortMergePlan, nestedLoopPlan, hashJoinPlan, productPlan, tp);
 

@@ -135,7 +135,15 @@ class TablePlanner {
 			Constant val = mypred.equatesWithConstant(fldname);
 			if (val != null) {
 				IndexInfo ii = indexes.get(fldname);
-				if (!mypred.terms.get(0).operator().equals("=") && ii.getIndexType().contains("hash")) {
+				boolean isHashIndex = ii.getIndexType().contains("hash");
+				boolean isEqualOpr = true;
+				for (Term term: mypred.terms) {
+					if((term.LHS() == fldname || term.RHS() == fldname) && term.operator() != "=") {
+						isEqualOpr = false;
+						break;
+					}
+				}
+				if (isEqualOpr && isHashIndex) {
 					System.out.println("hash index incompatible with range query");
 					return null;
 				}
