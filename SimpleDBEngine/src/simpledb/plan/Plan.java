@@ -46,5 +46,4 @@ public interface Plan {
     */
    public Schema schema();
    
-   public String planType();
 }

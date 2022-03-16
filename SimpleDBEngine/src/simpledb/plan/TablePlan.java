@@ -71,7 +71,4 @@ public class TablePlan implements Plan {
       return layout.schema();
    }
    
-   public String planType() {
-	   return "TablePlan";
-   }
 }

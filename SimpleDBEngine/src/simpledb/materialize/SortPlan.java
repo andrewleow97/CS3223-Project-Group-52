@@ -166,7 +166,4 @@ public class SortPlan implements Plan {
       return src.next();
    }
    
-   public String planType() {
-	   return "SortPlan";
-   }
 }

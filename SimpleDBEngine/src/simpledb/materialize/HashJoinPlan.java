@@ -122,7 +122,4 @@ public class HashJoinPlan implements Plan {
 		return sch;
 	}
 	
-	   public String planType() {
-		   return "HashJoinPlan";
-	   }
 }

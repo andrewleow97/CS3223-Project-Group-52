@@ -58,7 +58,7 @@ public class NestedLoopScan implements Scan {
 	}
 
 	public boolean joinCondition(Constant v1, Constant v2, String opr) {
-		switch (this.opr) {
+		switch (opr) {
 		case "=":
 			return v1.compareTo(v2) == 0;
 		case "<":

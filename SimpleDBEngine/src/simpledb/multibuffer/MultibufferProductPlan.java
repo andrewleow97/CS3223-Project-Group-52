@@ -113,7 +113,4 @@ public class MultibufferProductPlan implements Plan {
       return t;
    }
    
-   public String planType() {
-	   return "MultibufferProductPlan";
-   }
 }

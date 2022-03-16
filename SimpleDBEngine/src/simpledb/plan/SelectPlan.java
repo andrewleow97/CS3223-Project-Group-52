@@ -84,7 +84,4 @@ public class SelectPlan implements Plan {
       return p.schema();
    }
    
-   public String planType() {
-	   return "SelectPlan";
-   }
 }

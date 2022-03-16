@@ -99,7 +99,4 @@ public class GroupByPlan implements Plan {
       return sch;
    }
    
-   public String planType() {
-	   return "DistinctPlan";
-   }
 }

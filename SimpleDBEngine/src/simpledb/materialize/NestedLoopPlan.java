@@ -98,8 +98,5 @@ public class NestedLoopPlan implements Plan {
       return sch;
    }
    
-   public String planType() {
-	   return "NestedLoopPlan";
-   }
 }
 

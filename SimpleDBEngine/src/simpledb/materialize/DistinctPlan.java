@@ -93,7 +93,4 @@ public class DistinctPlan implements Plan {
 		return sch;
 	}
 	
-	   public String planType() {
-		   return "DistinctPlan";
-	   }
 }

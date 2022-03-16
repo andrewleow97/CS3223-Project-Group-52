@@ -68,10 +68,8 @@ public class Schema {
     * @param sch the other schema
     */
    public void addAll(Schema sch) {
-//	  System.out.println("1" + sch.fields());
       for (String fldname : sch.fields())
     	  add(fldname, sch);
-//      System.out.println("2" + sch.fields());
    }
    
    /**

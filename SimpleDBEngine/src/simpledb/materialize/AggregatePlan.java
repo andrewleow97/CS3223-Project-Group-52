@@ -96,7 +96,4 @@ public class AggregatePlan implements Plan {
       return sch;
    }
    
-   public String planType() {
-	   return "AggregatePlan";
-   }
 }

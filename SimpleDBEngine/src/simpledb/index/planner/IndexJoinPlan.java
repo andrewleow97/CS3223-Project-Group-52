@@ -89,8 +89,4 @@ public class IndexJoinPlan implements Plan {
    public Schema schema() {
       return sch;
    }
-   
-   public String planType() {
-	   return "indexJoin";
-   }
 }

@@ -85,7 +85,4 @@ public class MaterializePlan implements Plan {
       return srcplan.schema();
    }
    
-   public String planType() {
-	   return "MaterializePlan";
-   }
 }
