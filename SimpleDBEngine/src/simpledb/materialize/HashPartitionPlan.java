@@ -20,8 +20,8 @@ public class HashPartitionPlan implements Plan {
 	private int k;
 
 	/**
-	 * Creates a hashjoin plan for the two specified queries. The RHS must be
-	 * materialized after it is sorted, in order to deal with possible duplicates.
+	 * Creates a hashpartition plan for the two specified queries. 
+	 * The plan will be partitioned into a hash table with buckets according to the amount of available buffers.
 	 * 
 	 * @param p        the query plan
 	 * @param fldname1 the join field
@@ -36,10 +36,11 @@ public class HashPartitionPlan implements Plan {
 	}
 
 	/**
-	 * The method first sorts its two underlying scans on their join field. It then
-	 * returns a hashjoin scan of the two sorted table scans.
+	 * The method opens a Scan on the query plan, and splits the scan into multiple 
+	 * buckets of TempTables based on the hash of the value in the joinfield.
 	 * 
-	 * @see simpledb.plan.Plan#open()
+	 * 
+	 * @return output the partitioned scan of Plan p
 	 */
 	public HashMap<Integer, TempTable> partition() {
 		Scan s = p.open();
@@ -47,16 +48,20 @@ public class HashPartitionPlan implements Plan {
 		return output;
 	}
 
+	/**
+	 * Open a scan on the current plan.
+	 * 
+	 * @see simpledb.plan.Plan#open()
+	 * @return the Scan of the current plan
+	 */
 	public Scan open() {
 		return p.open();
 	};
 
 	/**
 	 * Return the number of block acceses required to hashjoin the sorted tables.
-	 * Since a hashjoin can be preformed with a single pass through each table, the
-	 * method returns the sum of the block accesses of the materialized sorted
-	 * tables. It does <i>not</i> include the one-time cost of materializing and
-	 * sorting the records.
+	 * Since a hashjoin partitioning can be done with a single pass through each table, the
+	 * method returns the blocks accessed by the current plan = |R|.
 	 * 
 	 * @see simpledb.plan.Plan#blocksAccessed()
 	 */
@@ -65,17 +70,12 @@ public class HashPartitionPlan implements Plan {
 	}
 
 	/**
-	 * Return the number of records in the join. Assuming uniform distribution, the
-	 * formula is:
-	 * 
-	 * <pre>
-	 *  R(join(p1,p2)) = R(p1)*R(p2)/max{V(p1,F1),V(p2,F2)}
-	 * </pre>
+	 * Return the number of records in the partition.
 	 * 
 	 * @see simpledb.plan.Plan#recordsOutput()
 	 */
 	public int recordsOutput() {
-		return p.distinctValues(fldname1);
+		return p.recordsOutput();
 	}
 
 	/**
@@ -101,18 +101,42 @@ public class HashPartitionPlan implements Plan {
 		return sch;
 	}
 
+	/**
+	 * Calculates the hash value of integer x based on the number of available buffers.
+	 * Determines which bucket the tuple will be hashed into.
+	 * 
+	 * @param x the integer value of the join field
+	 * @return the hash value of x
+	 */
 	public int hashInt(int x) {
 		return x % k;
 	}
 
+	/**
+	 * Calculates the hash value of String x based on the number of available buffers.
+	 * Done by using the hashCode of String x.
+	 * Determines which bucket the tuple will be hashed into.
+	 * 
+	 * @param x the String value of the join field
+	 * @return the hash value of x
+	 */
 	public int hashString(String x) {
 		int result = ((x == null) ? 0 : x.hashCode());
 		return result % k;
 	}
 
-//   
+	/**
+	 * Partitions the scan into a few TempTables as per Grace Hash Join partitioning phase
+	 * The number of buckets is determined by B, the number of available buffers - 1.
+	 * The appropriate bucket is chosen using the hashInt() or hashString() functions.
+	 * The values are copied from the scan into the TempTable for all the schema fields.
+	 * 
+	 * @param src the scan on the query plan
+	 * @return the partitioned table of the scan
+	 */
 	private HashMap<Integer, TempTable> splitIntoRuns(Scan src) {
 		HashMap<Integer, TempTable> temps = new HashMap<>();
+		// intialise the hashmap with empty temptables
 		for (int i = 0; i < k; i++) {
 			TempTable currenttemp = new TempTable(tx, sch);
 			temps.put(i, currenttemp);
@@ -123,6 +147,7 @@ public class HashPartitionPlan implements Plan {
 
 		while (src.next()) {
 			int hash = 0;
+			// choose the correct bucket
 			try {
 				int joinval = src.getInt(fldname1);
 				hash = hashInt(joinval);
@@ -132,12 +157,12 @@ public class HashPartitionPlan implements Plan {
 				hash = hashString(joinval);
 
 			}
+			// insert into the correct partition
 			UpdateScan currscan = temps.get(hash).open();
 			currscan.insert();
 			for (String fldname : sch.fields()) {
 				currscan.setVal(fldname, src.getVal(fldname));
 			}
-			// currentscan is the whole record -> add to temptable in position hash
 			currscan.close();
 
 		}

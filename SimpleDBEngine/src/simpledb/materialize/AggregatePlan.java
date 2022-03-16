@@ -7,7 +7,7 @@ import simpledb.plan.Plan;
 import simpledb.query.*;
 
 /**
- * The Plan class for the <i>groupby</i> operator.
+ * The Plan class for the <i>aggregate</i> operator.
  * @author Edward Sciore
  */
 public class AggregatePlan implements Plan {
@@ -16,30 +16,24 @@ public class AggregatePlan implements Plan {
    private Schema sch = new Schema();
    
    /**
-    * Create a groupby plan for the underlying query.
-    * The grouping is determined by the specified
-    * collection of group fields,
-    * and the aggregation is computed by the
-    * specified collection of aggregation functions.
+    * Create a aggregate plan for the underlying query.
+    * The aggregation is determined by the specified
+    * collection of aggregation functions.
+    * 
     * @param p a plan for the underlying query
-    * @param groupfields the group fields
     * @param aggfns the aggregation functions
     * @param tx the calling transaction
     */
    public AggregatePlan(Transaction tx, Plan p,List<AggregationFn> aggfns) { 
       this.aggfns = aggfns;
       this.p = p;
-
-//      this.sch = p.schema();
       for (AggregationFn fn : aggfns) {
          sch.addIntField(fn.fieldName());
       }
    }
    
    /**
-    * This method opens a sort plan for the specified plan.
-    * The sort plan ensures that the underlying records
-    * will be appropriately grouped.
+    * This method opens a scan for the specified aggregation plan.
     * @see simpledb.plan.Plan#open()
     */
    public Scan open() {
@@ -60,9 +54,9 @@ public class AggregatePlan implements Plan {
    }
    
    /**
-    * Return the number of groups.  Assuming equal distribution,
-    * this is the product of the distinct values
-    * for each grouping field.
+    * Return the number of groups.  
+    * Assuming single aggregation values for each group, this value is 1.
+    * 
     * @see simpledb.plan.Plan#recordsOutput()
     */
    public int recordsOutput() {
@@ -71,12 +65,9 @@ public class AggregatePlan implements Plan {
    }
    
    /**
-    * Return the number of distinct values for the
-    * specified field.  If the field is a grouping field,
-    * then the number of distinct values is the same
-    * as in the underlying query.
-    * If the field is an aggregate field, then we
-    * assume that all values are distinct.
+    * Return the number of distinct values for the specified field.  
+    * We assume that all values are distinct.
+    * 
     * @see simpledb.plan.Plan#distinctValues(java.lang.String)
     */
    public int distinctValues(String fldname) {
@@ -88,8 +79,8 @@ public class AggregatePlan implements Plan {
    
    /**
     * Returns the schema of the output table.
-    * The schema consists of the group fields,
-    * plus one field for each aggregation function.
+    * The schema consists of all the selection fields and aggregation functions.
+    * 
     * @see simpledb.plan.Plan#schema()
     */
    public Schema schema() {

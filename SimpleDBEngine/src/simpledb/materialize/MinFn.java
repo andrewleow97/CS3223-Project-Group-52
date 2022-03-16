@@ -9,7 +9,7 @@ public class MinFn implements AggregationFn {
 	   
 	   
 	   /**
-	    * Create a max aggregation function for the specified field.
+	    * Create a min aggregation function for the specified field.
 	    * @param fldname the name of the aggregated field
 	    */
 	   public MinFn(String fldname) {
@@ -17,8 +17,7 @@ public class MinFn implements AggregationFn {
 	   }
 	   
 	   /**
-	    * Start a new minimum to be the 
-	    * field value in the current record.
+	    * Start a new minimum to be the field value in the current record.
 	    * @see simpledb.materialize.AggregationFn#processFirst(simpledb.query.Scan)
 	    */
 	   public void processFirst(Scan s) {

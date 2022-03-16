@@ -5,7 +5,14 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import simpledb.jdbc.embedded.EmbeddedDriver;
 import simpledb.jdbc.network.NetworkDriver;
-// path to connect jdbc:simpledb:studentdb
+
+/**
+ * The test class to test various query types and combinations for the SimpleDB+ DBMS system.
+ * This class will be used during the demo to show each function 
+ * we are supposed to complete as part of project requirements.
+ * 
+ *
+ */
 public class SimpleIJTest {
    public static void main(String[] args) {
 
@@ -80,17 +87,18 @@ public class SimpleIJTest {
 //	  queries.add("select did, deptid, dname, cid from dept, course where did != deptid");
 //	  
 //	  //4 table queries
-	  //Equality
-	  queries.add("select sid, dname from student, dept, course, enroll where majorid = did and did = deptid and sid = studentid order by sid desc");
-	  //Non equi
-	  queries.add("select sid, majorid, did, deptid, prof from student, dept, course, section where majorid <> did and did = deptid and cid = courseid");
-	  queries.add("select sid, majorid, did, deptid, prof from student, dept, course, section where majorid <> did and did = deptid and cid < courseid");
+//	  //Equality
+//	  queries.add("select sid, dname from student, dept, course, enroll where majorid = did and did = deptid and sid = studentid order by sid desc");
+//	  //Non equi
+//	  queries.add("select sid, majorid, did, deptid, prof from student, dept, course, section where majorid <> did and did = deptid and cid = courseid");
+//	  queries.add("select sid, majorid, did, deptid, prof from student, dept, course, section where majorid <> did and did = deptid and cid < courseid");
 
 	  
 	  queries.add("exit");
 	  
       Driver d = new EmbeddedDriver();
 
+      // start connection to studentdb database
       try (Connection conn = d.connect("studentdb", null);
            Statement stmt = conn.createStatement()) {
          System.out.print("\nSQL> ");
@@ -112,6 +120,11 @@ public class SimpleIJTest {
       }
    }
 
+   /**
+    * Perform query operation 
+    * @param stmt statement object to hold the SQL statement
+    * @param cmd SQL command to be executed
+    */
    private static void doQuery(Statement stmt, String cmd) {
       try (ResultSet rs = stmt.executeQuery(cmd)) {
          ResultSetMetaData md = rs.getMetaData();

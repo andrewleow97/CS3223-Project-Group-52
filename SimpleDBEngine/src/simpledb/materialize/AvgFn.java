@@ -31,7 +31,7 @@ public class AvgFn implements AggregationFn {
 	   
 	   /**
 	    * Since SimpleDB does not support null values,
-	    * this method always increments the count, and add to the sum,
+	    * this method always increments the count, and adds to the sum,
 	    * regardless of the field.
 	    * @see simpledb.materialize.AggregationFn#processNext(simpledb.query.Scan)
 	    */
@@ -49,7 +49,7 @@ public class AvgFn implements AggregationFn {
 	   }
 	   
 	   /**
-	    * Return the current avg.
+	    * Return the current avg using the floor value of sum divided by count.
 	    * @see simpledb.materialize.AggregationFn#value()
 	    */
 	   public Constant value() {

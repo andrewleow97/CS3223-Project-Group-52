@@ -17,7 +17,7 @@ public class SumFn implements AggregationFn {
 	   }
 	   
 	   /**
-	    * Start a new max to be the field value in the current record.
+	    * Start a new sum to be the field value in the current record.
 	    * @see simpledb.materialize.AggregationFn#processFirst(simpledb.query.Scan)
 	    */
 	   public void processFirst(Scan s) {
@@ -25,7 +25,7 @@ public class SumFn implements AggregationFn {
 	   }
 	   
 	   /**
-	    * Increase SUM value with the current record
+	    * Increase sum value with the current record by adding its int value to the sum.
 	    * @see simpledb.materialize.AggregationFn#processNext(simpledb.query.Scan)
 	    */
 	   public void processNext(Scan s) {

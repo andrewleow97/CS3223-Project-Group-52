@@ -8,7 +8,7 @@ import simpledb.record.*;
 import java.util.*;
 
 /**
- * The Plan class for the <i>hashjoin</i> operator.
+ * The Plan class for merging phase of the <i>hashjoin</i> operator.
  * 
  * @author Edward Sciore
  */
@@ -21,8 +21,8 @@ public class HashJoinPlan implements Plan {
 	/**
 	 * Creates a hashjoin plan for the two specified queries.
 	 * 
-	 * @param p1       the LHS query plan
-	 * @param p2       the RHS query plan
+	 * @param p1       the LHS partitioned query plan
+	 * @param p2       the RHS partitioned query plan
 	 * @param fldname1 the LHS join field
 	 * @param fldname2 the RHS join field
 	 * @param tx       the calling transaction
@@ -42,28 +42,17 @@ public class HashJoinPlan implements Plan {
 	 * returns a hashjoin scan of the two partitions.
 	 * 
 	 * @see simpledb.plan.Plan#open()
+	 * @return out the hashjoin scan of the two partitions
 	 */
 	public Scan open() {
-		/**
-		 * 1. REHASH S1 
-		 * 2. OPEN SCAN ON S2 BASED ON OLD KEY OF S1 
-		 * 3. GET OUTPUT FROM HASHJOINSCAN AND COMBINE TUPLES UNDER SCHEMA 
-		 * 4. 
-		 * 5. OUTPUT SCAN ON FINAL HASHTABLE
-		 */
 	
 
-		// 2 hashmap of partitions
+		// partition each scan first
 		HashMap<Integer, TempTable> partition1 = p1.partition();
-	
 		HashMap<Integer, TempTable> partition2 = p2.partition();
 	
-		// join into 1 hashmap of partitions -> scan on this one
-		// h1 hash table for comparison for final output
-		// rehash s1 into h1
-		// for temptable in s2
-		// rehash s2 copy into s1 if match
-		HashJoinScan out = new HashJoinScan(tx,partition1,partition2,fldname1,fldname2,sch);
+		// perform merging of both partitions
+		HashJoinScan out = new HashJoinScan(tx, partition1,partition2,fldname1,fldname2,sch);
 	
 		return out;
 	}
@@ -71,11 +60,11 @@ public class HashJoinPlan implements Plan {
 
 	/**
 	 * Return the number of block acceses required to hashjoin the two tables.
-	 * Since a hashjoin can be preformed with a single pass through each table, the
-	 * method returns the sum of the block accesses of the materialized sorted
-	 * tables.
+	 * Since a hashjoin merge can be preformed with a single pass through each table, the
+	 * method returns the sum of the block accesses of the partitioned tables.
 	 * 
 	 * @see simpledb.plan.Plan#blocksAccessed()
+	 * @return return the total cost of the grace hash join
 	 */
 	public int blocksAccessed() { // partition = 2(M+N), matching = (M+N)
 		return 3 * (p1.blocksAccessed() + p2.blocksAccessed());

@@ -5,7 +5,7 @@ import java.util.*;
 import simpledb.query.*;
 
 /**
- * The Scan class for the <i>groupby</i> operator.
+ * The Scan class for the <i>aggregate</i> operator.
  * 
  * @author Edward Sciore
  */
@@ -15,10 +15,9 @@ public class AggregateScan implements Scan {
 	private boolean aggnext;
 
 	/**
-	 * Create a groupby scan, given a grouped table scan.
+	 * Create an aggregate scan, given a aggregate table scan.
 	 * 
 	 * @param s           the grouped scan
-	 * @param groupfields the group fields
 	 * @param aggfns      the aggregation functions
 	 */
 	public AggregateScan(Scan s, List<AggregationFn> aggfns) {
@@ -40,11 +39,10 @@ public class AggregateScan implements Scan {
 	}
 
 	/**
-	 * Move to the next group. The key of the group is determined by the group
-	 * values at the current record. The method repeatedly reads underlying records
-	 * until it encounters a record having a different key. The aggregation
-	 * functions are called for each record in the group. The values of the grouping
-	 * fields for the group are saved.
+	 * Move to the next aggregation function on a grouped scan.
+	 * For each aggregation function, process the first tuple, and process each of the next aggregation functions
+	 * while there are tuples remaining in the scan.
+	 * Returns false when there are no more tuples.
 	 * 
 	 * @see simpledb.query.Scan#next()
 	 */
@@ -73,10 +71,11 @@ public class AggregateScan implements Scan {
 	}
 
 	/**
-	 * Get the Constant value of the specified field. If the field is a group field,
-	 * then its value can be obtained from the saved group value. Otherwise, the
-	 * value is obtained from the appropriate aggregation function.
+	 * Get the Constant value of the specified field. 
+	 * The value is obtained from the appropriate aggregation function value().
+	 * If the aggregation function does not contain the fieldname, throw a runtime exception.
 	 * 
+	 * @param fldname the field name to get the value from
 	 * @see simpledb.query.Scan#getVal(java.lang.String)
 	 */
 	public Constant getVal(String fldname) {
@@ -87,10 +86,10 @@ public class AggregateScan implements Scan {
 	}
 
 	/**
-	 * Get the integer value of the specified field. If the field is a group field,
-	 * then its value can be obtained from the saved group value. Otherwise, the
-	 * value is obtained from the appropriate aggregation function.
+ 	 * Get the integer value of the specified field. 
+	 * The value is obtained from the appropriate aggregation function getVal() typecast as integer.
 	 * 
+	 * @param fldname the field name to get the value from
 	 * @see simpledb.query.Scan#getVal(java.lang.String)
 	 */
 	public int getInt(String fldname) {
@@ -98,10 +97,10 @@ public class AggregateScan implements Scan {
 	}
 
 	/**
-	 * Get the string value of the specified field. If the field is a group field,
-	 * then its value can be obtained from the saved group value. Otherwise, the
-	 * value is obtained from the appropriate aggregation function.
+ 	 * Get the integer value of the specified field. 
+	 * The value is obtained from the appropriate aggregation function getVal() typecast as string.
 	 * 
+	 * @param fldname the field name to get the value from
 	 * @see simpledb.query.Scan#getVal(java.lang.String)
 	 */
 	public String getString(String fldname) {
@@ -109,9 +108,9 @@ public class AggregateScan implements Scan {
 	}
 
 	/**
-	 * Return true if the specified field is either a grouping field or created by
-	 * an aggregation function.
+	 * Return true if the specified field exists within the list of aggregation functions.
 	 * 
+	 * @param fldname the field name to check
 	 * @see simpledb.query.Scan#hasField(java.lang.String)
 	 */
 	public boolean hasField(String fldname) {

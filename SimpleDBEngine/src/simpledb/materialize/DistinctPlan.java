@@ -7,7 +7,7 @@ import simpledb.plan.Plan;
 import simpledb.query.*;
 
 /**
- * The Plan class for the <i>groupby</i> operator.
+ * The Plan class for the <i>distinct</i> operator.
  * 
  * @author Edward Sciore
  */
@@ -19,16 +19,15 @@ public class DistinctPlan implements Plan {
 	private List<String> fields;
 
 	/**
-	 * Create a groupby plan for the underlying query. The grouping is determined by
-	 * the specified collection of group fields, and the aggregation is computed by
-	 * the specified collection of aggregation functions.
+	 * Create a distinct plan for the underlying query. 
+	 * The distinct operator will cause all fields to become distinct by our interpretation.
+	 * Only distinct tuples will be returned by this plan/scan.
 	 * 
 	 * @param p           a plan for the underlying query
-	 * @param groupfields the group fields
-	 * @param aggfns      the aggregation functions
-	 * @param tx          the calling transaction
+	 * @param tx 		  the underlying transaction
+	 * @param fields      the list of fields to be selected distinctly
 	 */
-	public DistinctPlan(Transaction tx, Plan p, List<String> fields) { // [sname, majorid, gradyear]
+	public DistinctPlan(Transaction tx, Plan p, List<String> fields) {
 		this.tx = tx;
 		this.p = p;
 		this.sch = p.schema();
@@ -38,9 +37,10 @@ public class DistinctPlan implements Plan {
 
 	/**
 	 * This method opens a sort plan for the specified plan. The sort plan ensures
-	 * that the underlying records will be appropriately grouped.
+	 * that the underlying records will only contain distinct values.
 	 * 
 	 * @see simpledb.plan.Plan#open()
+	 * @return returns the DistinctScan on the current plan, sorts it and removes duplicates
 	 */
 	public Scan open() {
 		Scan s = p.open();
@@ -48,7 +48,7 @@ public class DistinctPlan implements Plan {
 	}
 
 	/**
-	 * Return the number of blocks required to compute the aggregation, which is one
+	 * Return the number of blocks required to compute the distinct values, which is one
 	 * pass through the sorted table. It does <i>not</i> include the one-time cost
 	 * of materializing and sorting the records.
 	 * 
@@ -69,10 +69,9 @@ public class DistinctPlan implements Plan {
 	}
 
 	/**
-	 * Return the number of distinct values for the specified field. If the field is
-	 * a grouping field, then the number of distinct values is the same as in the
-	 * underlying query. If the field is an aggregate field, then we assume that all
-	 * values are distinct.
+	 * Return the number of distinct values for the specified field. 
+	 * The number of distinct values is the same as in the
+	 * underlying query/field.
 	 * 
 	 * @see simpledb.plan.Plan#distinctValues(java.lang.String)
 	 */
@@ -84,8 +83,8 @@ public class DistinctPlan implements Plan {
 	}
 
 	/**
-	 * Returns the schema of the output table. The schema consists of the group
-	 * fields, plus one field for each aggregation function.
+	 * Returns the schema of the output table. The schema consists of the selected
+	 * fields.
 	 * 
 	 * @see simpledb.plan.Plan#schema()
 	 */

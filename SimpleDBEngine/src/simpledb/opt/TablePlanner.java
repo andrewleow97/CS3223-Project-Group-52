@@ -34,11 +34,12 @@ class TablePlanner {
 	/**
 	 * Creates a new table planner. The specified predicate applies to the entire
 	 * query. The table planner is responsible for determining which portion of the
-	 * predicate is useful to the table, and when indexes are useful.
+	 * predicate is useful to the table, choose which join algorithm is called, and when indexes are useful.
 	 * 
 	 * @param tblname the name of the table
 	 * @param mypred  the query predicate
 	 * @param tx      the calling transaction
+	 * @param mdm     the metadata manager to obtain index information
 	 */
 	public TablePlanner(String tblname, Predicate mypred, Transaction tx, MetadataMgr mdm) {
 		this.mypred = mypred;
@@ -62,13 +63,13 @@ class TablePlanner {
 	}
 
 	/**
-	 * Constructs a join plan of the specified plan and the table. The plan will use
-	 * an indexjoin, if possible. (Which means that if an indexselect is also
-	 * possible, the indexjoin operator takes precedence.) The method returns null
-	 * if no join is possible.
+	 * Constructs an index join plan of the specified plan and the table, if possible. 
+	 * (Which means that if an indexselect is also
+	 * possible, the indexjoin operator takes precedence.) 
+	 * The method returns null if no join is possible.
 	 * 
 	 * @param current the specified plan
-	 * @return a join plan of the plan and this table
+	 * @return an index join plan of the current plan and this table
 	 */
 	public Plan makeIndexJoinPlan(Plan current) {
 		Schema currsch = current.schema();
@@ -80,6 +81,13 @@ class TablePlanner {
 		return p;
 	}
 
+	/**
+	 * Constructs a sort merge join plan of the specified plan and the table, if possible. 
+	 * The method returns null if no join is possible.
+	 * 
+	 * @param current the specified plan
+	 * @return a sort merge join plan of the current plan and this table
+	 */
 	public Plan makeSortMergePlan(Plan current) {
 		Schema currsch = current.schema();
 		Predicate joinpred = mypred.joinSubPred(myschema, currsch);
@@ -90,6 +98,14 @@ class TablePlanner {
 		return p;
 	}
 
+	
+	/**
+	 * Constructs a nested loop join plan of the specified plan and the table, if possible. 
+	 * The method returns null if no join is possible.
+	 * 
+	 * @param current the specified plan
+	 * @return a nested loop join plan of the current plan and this table
+	 */
 	public Plan makeNestedLoopPlan(Plan current) {
 		Schema currsch = current.schema();
 		Predicate joinpred = mypred.joinSubPred(myschema, currsch);
@@ -101,6 +117,13 @@ class TablePlanner {
 		return p;
 	}
 
+	/**
+	 * Constructs a grace hash join plan of the specified plan and the table, if possible. 
+	 * The method returns null if no join is possible.
+	 * 
+	 * @param current the specified plan
+	 * @return a grace hash join plan of the current plan and this table
+	 */
 	public Plan makeHashJoinPlan(Plan current) {
 		Schema currsch = current.schema();
 		Predicate joinpred = mypred.joinSubPred(myschema, currsch);
@@ -112,6 +135,12 @@ class TablePlanner {
 		return p;
 	}
 	
+	/**
+	 * Constructs a cross product join plan of the specified plan and the table.
+	 * 
+	 * @param current the specified plan
+	 * @return a cross product join plan of the current plan and this table
+	 */
 	public Plan makeDefaultProductPlan(Plan current) {
 		Schema currsch = current.schema();
 		Plan p = makeProductJoin(current, currsch);
@@ -129,6 +158,15 @@ class TablePlanner {
 		return new MultibufferProductPlan(tx, current, p);
 	}
 
+	/**
+	 * Constructs an index selection plan of the selection field and this table.
+	 * The function will check if the selection predicate is a range query, and if the index used is a hash
+	 * As hash indexes are incompatible with range queries, it will choose to not use an index selection
+	 * Otherwise if a btree hash is present on the field, it will attempt to use that.
+	 * The function also stores the index used for selection in storeIndexSelectPlan for use in the query plan.
+	 * 
+	 * @return an index select plan of the specified plan and this table if possible, otherwise return null
+	 */
 	private Plan makeIndexSelect() {
 		storeIndexSelectPlan = new HashMap<String, String>();
 		for (String fldname : indexes.keySet()) {
@@ -138,35 +176,54 @@ class TablePlanner {
 				boolean isHashIndex = ii.getIndexType().contains("hash");
 				boolean isEqualOpr = true;
 				for (Term term: mypred.terms) {
+					// if either lhs or rhs has the field, or if the operator is not equality
 					if((term.LHS().equals(fldname) || term.RHS().equals(fldname)) && !term.operator().equals("=")) {
 						isEqualOpr = false;
 						break;
 					}
 				}
 				if (!isEqualOpr && isHashIndex) {
-//					System.out.println("hash index incompatible with range query");
 					return null;
 				}
 				storeIndexSelectPlan.put(myplan.tblname, fldname + "(" + ii.getIndexType() + ")");
 				System.out.println("index on " + fldname + " used");
 				String operator = mypred.getSelectOperator(fldname);
-				if (operator == null) {
-//					System.out.println("operator is null");
-				}
 				return new IndexSelectPlan(myplan, ii, val, operator);
 			}
 		}
 		return null;
 	}
 
+	/**
+	 * Returns the index used for selection and its corresponding fieldname.
+	 * This will be used in the query plan.
+	 * 
+	 * @return a hash table of the index used for selection
+	 */
 	public HashMap<String, String> getIndexUsedSelectPlan() {
 		return storeIndexSelectPlan;
 	}
 	
+	/**
+	 * Returns the index used for join and its corresponding fieldname.
+	 * This will be used in the query plan.
+	 * 
+	 * @return a hash table of the index used for join
+	 */
 	public HashMap<String, String> getIndexUsedFromJoin() {
 		return indexUsedJoin;
 	}
 	
+	/**
+	 * Attempts to return an index join plan on the current plan and myplan
+	 * The function will check if the outerfield matches any fields in the index
+	 * If so, and if the operator is for equality jion, then return the index join plan
+	 * Otherwise, return null.
+	 * 
+	 * @param current the specified plan
+	 * @param currsch the schema of the specified plan
+	 * @return an index join plan of the current plan and myplan, using the specified index and outer join field
+	 */
 	private Plan makeIndexJoin(Plan current, Schema currsch) {
 		for (String fldname : indexes.keySet()) {
 			String outerfield = mypred.equatesWithField(fldname);
@@ -174,9 +231,6 @@ class TablePlanner {
 				IndexInfo ii = indexes.get(fldname);
 				
 				String operator = mypred.getJoinOperator(fldname);
-				if (operator == null) {
-//					System.out.println("operator is null");
-				}
 				indexUsedJoin.put(myplan.tblname, fldname + "(" + ii.getIndexType() + ")");
 				Plan p = new IndexJoinPlan(current, myplan, ii, outerfield, operator);
 				p = addSelectPred(p);
@@ -186,10 +240,21 @@ class TablePlanner {
 		return null;
 	}
 
+	/**
+	 * Attempts to return a sort merge join plan on the current plan and myplan
+	 * The function will check if the LHS and RHS fields match any fieldnames in the current plan and my plan
+	 * If so, then return the sort merge join plan with the corresponding inner and outer tables.
+	 * Otherwise, return null.
+	 * 
+	 * @param current the specified plan
+	 * @param currsch the schema of the specified plan
+	 * @return a sort merge join plan of the current plan and myplan, using the specified inner and outer tables and join fields
+	 */
 	private Plan makeSortMergeJoin(Plan current, Schema currsch) {
 		for (Term t : mypred.terms) {
 			String fldname1 = t.LHS();
 			String fldname2 = t.RHS();
+			// selecting inner and outer tables
 			if (currsch.hasField(fldname1) && myplan.schema().hasField(fldname2)) {
 				Plan p = new MergeJoinPlan(tx, current, myplan, fldname1, fldname2);
 	
@@ -204,12 +269,23 @@ class TablePlanner {
 		return null;
 	}
 
+	/**
+	 * Attempts to return a nested loop join plan on the current plan and myplan
+	 * The function will check if the LHS and RHS fields match any fieldnames in the current plan and my plan
+	 * If so, then return the sort merge join plan with the corresponding inner and outer tables
+	 * as well as the operator for non-equality join support for nested loop join.
+	 * Otherwise, return null.
+	 * 
+	 * @param current the specified plan
+	 * @param currsch the schema of the specified plan
+	 * @return a nested loop join plan of the current plan and myplan, using the specified inner and outer tables, join fields and operator
+	 */
 	private Plan makeNestedLoopJoin(Plan current, Schema currsch) {
 		for (Term t : mypred.terms) {
 			String fldname1 = t.LHS();
 			String fldname2 = t.RHS();
 			String opr = t.operator();
-
+			// selecting inner and outer tables
 			if (currsch.hasField(fldname1) && myplan.schema().hasField(fldname2) ) {
 
 				Plan p = new NestedLoopPlan(tx, current, myplan, fldname1, fldname2, opr);
@@ -226,11 +302,21 @@ class TablePlanner {
 		return null;
 	}
 
+	/**
+	 * Attempts to return a hash join plan on the current plan and myplan
+	 * The function will check if the LHS and RHS fields match any fieldnames in the current plan and my plan
+	 * If so, then return the hash join plan with the corresponding inner and outer tables.
+	 * Otherwise, return null.
+	 * 
+	 * @param current the specified plan
+	 * @param currsch the schema of the specified plan
+	 * @return a hash join plan of the current plan and myplan, using the specified inner and outer tables and join fields.
+	 */
 	private Plan makeHashJoin(Plan current, Schema currsch) {
 		for (Term t : mypred.terms) {
 			String fldname1 = t.LHS();
 			String fldname2 = t.RHS();
-
+			// selecting inner and outer tables
 			if (currsch.hasField(fldname1) && myplan.schema().hasField(fldname2)) {
 				HashPartitionPlan currpartition = new HashPartitionPlan(tx, current, fldname1);
 				HashPartitionPlan mypartition = new HashPartitionPlan(tx, myplan, fldname2);
@@ -250,11 +336,25 @@ class TablePlanner {
 		return null;
 	}
 
+	/**
+	 * Returns a product join plan on the current plan and myplan
+	 * 
+	 * @param current the specified plan
+	 * @param currsch the schema of the specified plan
+	 * @return a product join plan of the current plan and myplan.
+	 */
 	private Plan makeProductJoin(Plan current, Schema currsch) {
 		Plan p = makeProductPlan(current);
 		return addJoinPred(p, currsch);
 	}
 
+	/**
+	 * Attempts to return the select plan used to select tuples based on the select predicate.
+	 * If there is no select predicate, return the original plan instead.
+	 * 
+	 * @param p the specified plan
+	 * @return a select plan of the current plan on the select predicate.
+	 */
 	private Plan addSelectPred(Plan p) {
 		Predicate selectpred = mypred.selectSubPred(myschema);
 		if (selectpred != null)
@@ -263,6 +363,13 @@ class TablePlanner {
 			return p;
 	}
 
+	/**
+	 * Attempts to return the select plan used to select tuples based on the join predicate.
+	 * If there is no select predicate, return the original plan instead.
+	 * 
+	 * @param p the specified plan
+	 * @return a select plan of the current plan on the select predicate.
+	 */
 	private Plan addJoinPred(Plan p, Schema currsch) {
 		Predicate joinpred = mypred.joinSubPred(currsch, myschema);
 		if (joinpred != null)
@@ -271,6 +378,12 @@ class TablePlanner {
 			return p;
 	}
 	
+	/**
+	 * Returns the join predicate used in the current plan for the query plan output.
+	 * 
+	 * @param current the specified plan
+	 * @return joinpred the predicate used to join the current plan, used for query plan output
+	 */
 	public Predicate returnJoinPredicate(Plan current) {
 		Schema currsch = current.schema();
 		Predicate joinpred = mypred.joinSubPred(myschema, currsch);
