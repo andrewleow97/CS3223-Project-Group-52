@@ -66,7 +66,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			else // no applicable join
 				currentplan = getLowestProductPlan(currentplan);
 		}
-		System.out.println(queryPlan.toString());
+//		System.out.println(queryPlan.toString());
 		
 		// Step 4. Project on the field names and return
 		currentplan = new ProjectPlan(currentplan, data.fields());

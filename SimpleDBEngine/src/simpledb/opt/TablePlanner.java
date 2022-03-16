@@ -144,14 +144,14 @@ class TablePlanner {
 					}
 				}
 				if (!isEqualOpr && isHashIndex) {
-					System.out.println("hash index incompatible with range query");
+//					System.out.println("hash index incompatible with range query");
 					return null;
 				}
 				storeIndexSelectPlan.put(myplan.tblname, fldname + "(" + ii.getIndexType() + ")");
 				System.out.println("index on " + fldname + " used");
 				String operator = mypred.getSelectOperator(fldname);
 				if (operator == null) {
-					System.out.println("operator is null");
+//					System.out.println("operator is null");
 				}
 				return new IndexSelectPlan(myplan, ii, val, operator);
 			}
@@ -175,7 +175,7 @@ class TablePlanner {
 				
 				String operator = mypred.getJoinOperator(fldname);
 				if (operator == null) {
-					System.out.println("operator is null");
+//					System.out.println("operator is null");
 				}
 				indexUsedJoin.put(myplan.tblname, fldname + "(" + ii.getIndexType() + ")");
 				Plan p = new IndexJoinPlan(current, myplan, ii, outerfield, operator);
