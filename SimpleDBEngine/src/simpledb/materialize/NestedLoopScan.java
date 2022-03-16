@@ -57,6 +57,7 @@ public class NestedLoopScan implements Scan {
 		hasmore1 = s1.next();
 	}
 
+	// Compare two constants v1 and v2 based on the operator value
 	public boolean joinCondition(Constant v1, Constant v2, String opr) {
 		switch (this.opr) {
 		case "=":
