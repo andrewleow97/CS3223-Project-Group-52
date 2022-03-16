@@ -26,7 +26,7 @@ public class AggregatePlan implements Plan {
     * @param aggfns the aggregation functions
     * @param tx the calling transaction
     */
-   public AggregatePlan(Transaction tx, Plan p,List<AggregationFn> aggfns, List<String> fields) { 
+   public AggregatePlan(Transaction tx, Plan p,List<AggregationFn> aggfns) { 
       this.aggfns = aggfns;
       this.p = p;
 
@@ -44,7 +44,7 @@ public class AggregatePlan implements Plan {
     */
    public Scan open() {
       Scan s = p.open();
-      return new AggregateScan(s, aggfns, sch.fields());
+      return new AggregateScan(s, aggfns);
    }
    
    /**

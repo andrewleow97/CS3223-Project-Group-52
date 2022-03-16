@@ -77,7 +77,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 
 		// Step 5. Group by
 		if (data.aggFields() != null && data.groupList() == null && data.aggFields().size() > 0) {
-			currentplan = new AggregatePlan(tx, currentplan, data.aggFields(), data.fields());
+			currentplan = new AggregatePlan(tx, currentplan, data.aggFields());
 		}
 
 		if (data.groupList() != null && data.aggFields() != null) {

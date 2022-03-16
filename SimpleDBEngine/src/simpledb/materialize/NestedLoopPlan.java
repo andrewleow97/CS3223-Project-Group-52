@@ -8,7 +8,7 @@ import simpledb.record.*;
 import java.util.*;
 
 /**
- * The Plan class for the <i>mergejoin</i> operator.
+ * The Plan class for the <i>nestedloopjoin</i> operator.
  * @author Edward Sciore
  */
 public class NestedLoopPlan implements Plan {
@@ -17,7 +17,7 @@ public class NestedLoopPlan implements Plan {
    private Schema sch = new Schema();
    
    /**
-    * Creates a mergejoin plan for the two specified queries.
+    * Creates a nestedloopjoin plan for the two specified queries.
     * The RHS must be materialized after it is sorted, 
     * in order to deal with possible duplicates.
     * @param p1 the LHS query plan
@@ -38,7 +38,7 @@ public class NestedLoopPlan implements Plan {
    }
    
    /** The method first sorts its two underlying scans
-     * on their join field. It then returns a mergejoin scan
+     * on their join field. It then returns a nestedloopjoin scan
      * of the two sorted table scans.
      * @see simpledb.plan.Plan#open()
      */
@@ -51,8 +51,8 @@ public class NestedLoopPlan implements Plan {
    
    /**
     * Return the number of block acceses required to
-    * mergejoin the sorted tables.
-    * Since a mergejoin can be preformed with a single
+    * nestedloopjoin the sorted tables.
+    * Since a nestedloopjoin can be preformed with a single
     * pass through each table, the method returns
     * the sum of the block accesses of the 
     * materialized sorted tables.

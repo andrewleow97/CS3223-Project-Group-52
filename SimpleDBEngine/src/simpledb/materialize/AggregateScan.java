@@ -12,7 +12,6 @@ import simpledb.query.*;
 public class AggregateScan implements Scan {
 	private Scan s;
 	private List<AggregationFn> aggfns;
-	private List<String> fields;
 	private boolean aggnext;
 
 	/**
@@ -22,10 +21,9 @@ public class AggregateScan implements Scan {
 	 * @param groupfields the group fields
 	 * @param aggfns      the aggregation functions
 	 */
-	public AggregateScan(Scan s, List<AggregationFn> aggfns, List<String> fields) {
+	public AggregateScan(Scan s, List<AggregationFn> aggfns) {
 		this.s = s;
 		this.aggfns = aggfns;
-		this.fields = fields;
 		beforeFirst();
 	}
 

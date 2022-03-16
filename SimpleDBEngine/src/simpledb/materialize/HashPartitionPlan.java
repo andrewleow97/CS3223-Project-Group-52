@@ -8,19 +8,19 @@ import simpledb.record.*;
 import java.util.*;
 
 /**
- * The Plan class for the <i>mergejoin</i> operator.
+ * The Plan class for the partition phase of the <i>hashjoin</i> operator.
  * 
  * @author Edward Sciore
  */
 public class HashPartitionPlan implements Plan {
 	private Plan p;
-	private String fldname1, fldname2;
+	private String fldname1;
 	private Schema sch = new Schema();
 	private Transaction tx;
 	private int k;
 
 	/**
-	 * Creates a mergejoin plan for the two specified queries. The RHS must be
+	 * Creates a hashjoin plan for the two specified queries. The RHS must be
 	 * materialized after it is sorted, in order to deal with possible duplicates.
 	 * 
 	 * @param p        the query plan
@@ -37,7 +37,7 @@ public class HashPartitionPlan implements Plan {
 
 	/**
 	 * The method first sorts its two underlying scans on their join field. It then
-	 * returns a mergejoin scan of the two sorted table scans.
+	 * returns a hashjoin scan of the two sorted table scans.
 	 * 
 	 * @see simpledb.plan.Plan#open()
 	 */
@@ -52,8 +52,8 @@ public class HashPartitionPlan implements Plan {
 	};
 
 	/**
-	 * Return the number of block acceses required to mergejoin the sorted tables.
-	 * Since a mergejoin can be preformed with a single pass through each table, the
+	 * Return the number of block acceses required to hashjoin the sorted tables.
+	 * Since a hashjoin can be preformed with a single pass through each table, the
 	 * method returns the sum of the block accesses of the materialized sorted
 	 * tables. It does <i>not</i> include the one-time cost of materializing and
 	 * sorting the records.

@@ -8,7 +8,7 @@ import simpledb.record.*;
 import java.util.*;
 
 /**
- * The Plan class for the <i>mergejoin</i> operator.
+ * The Plan class for the <i>hashjoin</i> operator.
  * 
  * @author Edward Sciore
  */
@@ -19,8 +19,7 @@ public class HashJoinPlan implements Plan {
 	private Transaction tx;
 
 	/**
-	 * Creates a mergejoin plan for the two specified queries. The RHS must be
-	 * materialized after it is sorted, in order to deal with possible duplicates.
+	 * Creates a hashjoin plan for the two specified queries.
 	 * 
 	 * @param p1       the LHS query plan
 	 * @param p2       the RHS query plan
@@ -39,8 +38,8 @@ public class HashJoinPlan implements Plan {
 	}
 
 	/**
-	 * The method first sorts its two underlying scans on their join field. It then
-	 * returns a mergejoin scan of the two sorted table scans.
+	 * The method first partitions its two plans into hash partitions. It then
+	 * returns a hashjoin scan of the two partitions.
 	 * 
 	 * @see simpledb.plan.Plan#open()
 	 */
@@ -54,25 +53,24 @@ public class HashJoinPlan implements Plan {
 		 */
 	
 
-	// 2 hashmap of partitions
-	HashMap<Integer, TempTable> partition1 = p1.partition();
-
-	HashMap<Integer, TempTable> partition2 = p2.partition();
-
-	// join into 1 hashmap of partitions -> scan on this one
-	// h1 hash table for comparison for final output
-	// rehash s1 into h1
-	// for temptable in s2
-	// rehash s2 copy into s1 if match
-
-	HashJoinScan out = new HashJoinScan(tx,partition1,partition2,fldname1,fldname2,sch);
-
-	return out;
+		// 2 hashmap of partitions
+		HashMap<Integer, TempTable> partition1 = p1.partition();
+	
+		HashMap<Integer, TempTable> partition2 = p2.partition();
+	
+		// join into 1 hashmap of partitions -> scan on this one
+		// h1 hash table for comparison for final output
+		// rehash s1 into h1
+		// for temptable in s2
+		// rehash s2 copy into s1 if match
+		HashJoinScan out = new HashJoinScan(tx,partition1,partition2,fldname1,fldname2,sch);
+	
+		return out;
 	}
 	
 
 	/**
-	 * Return the number of block acceses required to hashjoin the sorted tables.
+	 * Return the number of block acceses required to hashjoin the two tables.
 	 * Since a hashjoin can be preformed with a single pass through each table, the
 	 * method returns the sum of the block accesses of the materialized sorted
 	 * tables.
