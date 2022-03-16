@@ -12,12 +12,60 @@ public class SimpleIJTest {
 	  ArrayList<String> queries = new ArrayList<>();
 	  
 //	  queries.add("select");
-	  queries.add("select majorid, sname from student where majorid = 10");
-	  queries.add("select dname, cid from dept, course where did = deptid");
+	  //Test operators
+	  queries.add("select majorid from student");
+	  queries.add("select majorid from student where majorid = 10");
+	  queries.add("select majorid from student where majorid < 30");
+	  queries.add("select majorid from student where majorid <= 30");
+	  queries.add("select majorid from student where majorid > 30");
+	  queries.add("select majorid from student where majorid >= 30");
+	  queries.add("select majorid from student where majorid <> 30");
+	  queries.add("select majorid from student where majorid != 30");
+	  
+	  //Test aggregate
 	  queries.add("select count (sid) from student");
-	  queries.add("select deptid, min (cid) from course group by deptid");
+	  queries.add("select max (sid) from student");
+	  queries.add("select min (sid) from student");
+	  queries.add("select sum (sid) from student");
+	  queries.add("select avg (sid) from student");
+	  
+	  //Test distinct
+	  queries.add("select distinct dname from dept");
 	  queries.add("select distinct GradYear, majorid from student order by gradyear, majorid");
-	  queries.add("select GradYear, majorid from student order by gradyear, majorid");
+	  
+	  //Test sorting (order by)
+	  queries.add("select eid from enroll order by eid");
+	  queries.add("select eid from enroll order by eid asc");
+	  queries.add("select eid from enroll order by eid desc");
+	  
+	  //Test group by
+	  queries.add("select count (sname), gradyear from student group by gradyear");
+	  queries.add("select count (sname), gradyear from student group by gradyear order by gradyear desc");
+	  queries.add("select deptid, min (cid) from course group by deptid");
+	  
+	  //2 table queries
+	  //Equality
+	  queries.add("select dname, cid from dept, course where did = deptid");
+	  queries.add("select sname, sid from student, enroll where sid = studentid");
+	  queries.add("select sname, sid, majorid from student, enroll where sid = studentid and majorid > 10");//error cause select pred on idnex
+	  queries.add("select distinct sid, majorid from student, enroll where sid = studentid");
+	  queries.add("select sname, sid, majorid, gradyear from student, enroll where sid = studentid and gradyear > 2020");
+	  //Non equi
+	  queries.add("select did, deptid, dname, cid from dept, course where did < deptid");
+	  queries.add("select did, deptid, dname, cid from dept, course where did <= deptid");
+	  queries.add("select did, deptid, dname, cid from dept, course where did > deptid");
+	  queries.add("select did, deptid, dname, cid from dept, course where did <= deptid");
+	  queries.add("select did, deptid, dname, cid from dept, course where did <> deptid");
+	  queries.add("select did, deptid, dname, cid from dept, course where did != deptid");
+	  
+	  //4 table queries
+	  //Equality
+	  queries.add("select sid, dname from student, dept, course, enroll where majorid = did and did = deptid and sid = studentid");
+	  //Non equi
+	  queries.add("select sid, studentid, majorid, did, deptid from student, dept, course, enroll where majorid <> did and did = deptid and sid = studentid");
+	  queries.add("select sid, studentid, majorid, did, deptid from student, dept, course, enroll where majorid <> did and did = deptid and sid < studentid");
+
+	  
 	  queries.add("exit");
 	  
       Driver d = new EmbeddedDriver();

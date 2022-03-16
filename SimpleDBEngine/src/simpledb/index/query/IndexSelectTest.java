@@ -54,7 +54,7 @@ public class IndexSelectTest {
 	
 	private static void useIndexScan(IndexInfo ii, Plan p, Constant c) {
 		// Open an index select scan on the enroll table.
-		Plan idxplan = new IndexSelectPlan(p, ii, c);
+		Plan idxplan = new IndexSelectPlan(p, ii, c, "<");
 		Scan s = idxplan.open();
 		
 		while (s.next()) {
