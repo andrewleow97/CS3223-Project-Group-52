@@ -138,12 +138,12 @@ class TablePlanner {
 				boolean isHashIndex = ii.getIndexType().contains("hash");
 				boolean isEqualOpr = true;
 				for (Term term: mypred.terms) {
-					if((term.LHS() == fldname || term.RHS() == fldname) && term.operator() != "=") {
+					if((term.LHS().equals(fldname) || term.RHS().equals(fldname)) && !term.operator().equals("=")) {
 						isEqualOpr = false;
 						break;
 					}
 				}
-				if (isEqualOpr && isHashIndex) {
+				if (!isEqualOpr && isHashIndex) {
 					System.out.println("hash index incompatible with range query");
 					return null;
 				}
@@ -269,5 +269,11 @@ class TablePlanner {
 			return new SelectPlan(p, joinpred);
 		else
 			return p;
+	}
+	
+	public Predicate returnJoinPredicate(Plan current) {
+		Schema currsch = current.schema();
+		Predicate joinpred = mypred.joinSubPred(myschema, currsch);
+		return joinpred;
 	}
 }

@@ -45,9 +45,10 @@ public class SortMergeTest {
 			while (s2.next()) {
 				Constant d = s2.getVal(fldname2);
 				if (c.equals(d))
-					System.out.println(s2.getString("grade"));
+					System.out.println(s1.getVal("sname") + " " + s2.getString("grade"));
 			}
 		}
+		System.out.println();
 		s1.close();
 		s2.close();
 	}
@@ -58,7 +59,7 @@ public class SortMergeTest {
 		Scan s = mergePlan.open();
 
 		while (s.next()) {
-			System.out.println(s.getString("grade"));
+			System.out.println(s.getVal("sname") + " " + s.getString("grade"));
 		}
 		s.close();
 	}

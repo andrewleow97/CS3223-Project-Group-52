@@ -48,9 +48,10 @@ public class IndexJoinTest {
 				// Use each datarid to go to the corresponding Enroll record.
 				RID datarid = idx.getDataRid();
 				s2.moveToRid(datarid);  // table scans can move to a specified RID.
-				System.out.println(s2.getString("grade"));
+				System.out.println(s1.getVal("sname") + " " + s2.getString("grade"));
 			}
 		}
+		System.out.println();
 		idx.close();
 		s1.close();
 		s2.close();
@@ -62,7 +63,7 @@ public class IndexJoinTest {
 		Scan s = idxplan.open();
 
 		while (s.next()) {
-			System.out.println(s.getString("grade"));
+			System.out.println(s.getVal("sname") + " " + s.getString("grade"));
 		}
 		s.close();
 	}
