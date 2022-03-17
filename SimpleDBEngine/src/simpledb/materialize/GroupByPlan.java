@@ -23,18 +23,26 @@ public class GroupByPlan implements Plan {
     * and the aggregation is computed by the
     * specified collection of aggregation functions.
     * @param p a plan for the underlying query
+    * @param fields the overall fields in the query
     * @param groupfields the group fields
     * @param aggfns the aggregation functions
     * @param tx the calling transaction
     */
-   public GroupByPlan(Transaction tx, Plan p, List<String> groupfields, List<AggregationFn> aggfns) { // [sname, majorid, gradyear]
+   public GroupByPlan(Transaction tx, Plan p, List<String> fields, List<String> groupfields, List<AggregationFn> aggfns) { // [sname, majorid, gradyear]
       this.p = new SortPlan(tx, p, groupfields);
       this.groupfields = groupfields;
       this.aggfns = aggfns;
-      for (String fldname : groupfields)
-         sch.add(fldname, p.schema());
-      for (AggregationFn fn : aggfns)
-         sch.addIntField(fn.fieldName());
+
+      for (String fldname : fields) {
+    	  for (String a : groupfields) {
+    		  if (a.equals(fldname))
+    			  sch.add(fldname,  p.schema());
+    	  }
+    	  for (AggregationFn b : aggfns) {
+    		  if (b.fieldName().contains(fldname))
+    			  sch.addIntField(b.fieldName());
+    	  }
+      }
    }
    
    /**

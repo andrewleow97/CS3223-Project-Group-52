@@ -34,7 +34,19 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		queryPlan.computeIfAbsent("join", k -> new ArrayList<>());
 		queryPlan.computeIfAbsent("selectindex", k -> new ArrayList<>());
 		queryPlan.computeIfAbsent("joinindex", k -> new ArrayList<>());
+		boolean agFlag = false;
 		for(String d : data.fields()) {
+			for (AggregationFn ag : data.aggFields()) {
+				if (ag.fieldName().contains(d)) {
+					queryPlan.computeIfAbsent("field", k -> new ArrayList<>()).add(ag.fieldName());
+					agFlag = true;
+					break;
+				}
+			}
+			if (agFlag) {
+				agFlag = false;
+				continue;
+			}
 			queryPlan.computeIfAbsent("field", k -> new ArrayList<>()).add(d);
 		}
 		
@@ -77,7 +89,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		}
 
 		if (data.groupList() != null && data.aggFields() != null) {
-			currentplan = new GroupByPlan(tx, currentplan, data.groupList(), data.aggFields());
+			currentplan = new GroupByPlan(tx, currentplan, data.fields(), data.groupList(), data.aggFields());
 		}
 		
 		getQueryPlan();
