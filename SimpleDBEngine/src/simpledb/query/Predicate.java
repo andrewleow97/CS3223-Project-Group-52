@@ -125,6 +125,13 @@ public class Predicate {
       return null;
    }
    
+   /**
+    * Determine the operator of the term containing constant with specified field.
+    * If so, the method returns that operator.
+    * If not, the method returns null.
+    * @param fldname the name of the field
+    * @return either the operator or null
+    */
    public String getSelectOperator(String fldname) {
 	      for (Term t : terms) {
 	         Constant c = t.equatesWithConstant(fldname);
@@ -134,6 +141,13 @@ public class Predicate {
 	      return null;
    }
    
+   /**
+    * Determine the operator of the term containing specified field.
+    * If so, the method returns that operator.
+    * If not, the method returns null.
+    * @param fldname the name of the field
+    * @return either the operator or null
+    */
    public String getJoinOperator(String fldname) {
 	      for (Term t : terms) {
 	         String c = t.equatesWithField(fldname);
@@ -160,6 +174,10 @@ public class Predicate {
       return null;
    }
 
+   /**
+    * Convert the predicate to string form.
+    * @return predicate in string form
+    */
    public String toString() {
       Iterator<Term> iter = terms.iterator();
       if (!iter.hasNext()) 

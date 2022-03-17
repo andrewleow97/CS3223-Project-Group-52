@@ -79,6 +79,7 @@ public class BTreeIndex implements Index {
       BlockId leafblk = new BlockId(leaftbl, blknum);
       leaf = new BTreeLeaf(tx, leafblk, leafLayout, searchkey, opr);
       
+      // start iterating from lowest record for these operations
       if (opr.equals("<") || opr.equals("<=") || opr.equals("<>") || opr.equals("!=")) {
     	  leaf.pushFirst();
       }
@@ -161,7 +162,10 @@ public class BTreeIndex implements Index {
       return 1 + (int)(Math.log(numblocks) / Math.log(rpb));
    }
    
-   // to pass operator down to leaf for comparison
+   /**
+    * Set operator value according to query.
+    * @param opr the operator used for comparison
+    */
    public void setOpr(String opr) {
 	   this.opr = opr;
    }

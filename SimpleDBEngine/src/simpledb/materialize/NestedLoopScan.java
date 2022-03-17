@@ -19,12 +19,13 @@ public class NestedLoopScan implements Scan {
 	private List<RID> savedposition = null;
 
 	/**
-	 * Create a nestedloop scan for the two underlying sorted scans.
+	 * Create a nestedloop scan for the two underlying scans.
 	 * 
 	 * @param s1       the LHS scan
 	 * @param s2       the RHS scan
 	 * @param fldname1 the LHS join field
 	 * @param fldname2 the RHS join field
+	 * @param opr the operator of the term to join on
 	 */
 	public NestedLoopScan(Scan s1, Scan s2, String fldname1, String fldname2, String opr) {
 		this.s1 = s1;
@@ -57,7 +58,11 @@ public class NestedLoopScan implements Scan {
 		hasmore1 = s1.next();
 	}
 
-	// Compare two constants v1 and v2 based on the operator value
+	
+	/**
+    * Compare two constants v1 and v2 based on the operator value
+    * @return true if condition satisfied else false
+    */
 	public boolean joinCondition(Constant v1, Constant v2, String opr) {
 		switch (opr) {
 		case "=":
@@ -82,11 +87,9 @@ public class NestedLoopScan implements Scan {
 	/**
 	 * Move to the next record. This is where the action is.
 	 * <P>
-	 * If the next RHS record has the same join value, then move to it. Otherwise,
-	 * if the next LHS record has the same join value, then reposition the RHS scan
-	 * back to the first record having that join value. Otherwise, repeatedly move
-	 * the scan until a common join value is found. When one of the scans runs out
-	 * of records, return false.
+	 * Loop over each entry of s1 and s2 with s1 being the outer loop and s2 the inner.
+	 * If the records pointed by s1 and s2 fulfill the join condition, return true. 
+	 * If the end of s1 and s2 are reached, return false.
 	 * 
 	 * @see simpledb.query.Scan#next()
 	 */

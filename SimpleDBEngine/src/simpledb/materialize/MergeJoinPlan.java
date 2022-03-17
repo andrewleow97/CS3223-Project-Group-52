@@ -23,11 +23,11 @@ public class MergeJoinPlan implements Plan {
     * Creates a mergejoin plan for the two specified queries.
     * The RHS must be materialized after it is sorted, 
     * in order to deal with possible duplicates.
+    * @param tx the calling transaction
     * @param p1 the LHS query plan
     * @param p2 the RHS query plan
     * @param fldname1 the LHS join field
     * @param fldname2 the RHS join field
-    * @param tx the calling transaction
     */
    public MergeJoinPlan(Transaction tx, Plan p1, Plan p2, String fldname1, String fldname2) {
 	  this.tx = tx;
@@ -55,14 +55,14 @@ public class MergeJoinPlan implements Plan {
    }
    
    /**
-    * Return the number of block acceses required to
+    * Return the number of block accesses required to
     * mergejoin the sorted tables.
     * Since a mergejoin can be preformed with a single
     * pass through each table, the method returns
     * the sum of the block accesses of the 
     * materialized sorted tables.
-    * It does <i>not</i> include the one-time cost
-    * of materializing and sorting the records.
+    * Computes the cost of sorting the two tables and merging.
+    * Assumes cost to sort and merge follows formula taught in lecture.
     * @see simpledb.plan.Plan#blocksAccessed()
     */
    public int blocksAccessed() {
