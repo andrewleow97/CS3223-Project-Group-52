@@ -38,9 +38,9 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		queryPlan.computeIfAbsent("joinindex", k -> new ArrayList<>());
 		
 		//Adding all fields to the query plan
-		for(String d : data.fields()) {
-			queryPlan.computeIfAbsent("field", k -> new ArrayList<>()).add(d);
-		}
+		for(String d : data.aggOrder()) {
+		      queryPlan.computeIfAbsent("field", k -> new ArrayList<>()).add(d);
+		    }
 		
 		//Adding join and selection predicate into query plan
 		for (Term term : data.pred().terms) {
@@ -83,7 +83,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 
 		//Aggregate functions are being used and have group by clause
 		if (data.groupList() != null && data.aggFields() != null) {
-			currentplan = new GroupByPlan(tx, currentplan, data.groupList(), data.aggFields());
+			currentplan = new GroupByPlan(tx, currentplan, data.fields(), data.groupList(), data.aggFields(), data.aggOrder());
 		}
 		
 		//System.out.println(queryPlan);

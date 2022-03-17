@@ -13,6 +13,7 @@ import simpledb.record.*;
  */
 public class Parser {
 	private Lexer lex;
+	private List<String> aggOrder = new ArrayList<>();
 
 	private List<AggregationFn> aggFields = new ArrayList<>();
 
@@ -127,7 +128,7 @@ public class Parser {
 			sortFields = sortList(); //Store list of fields (index 0) and list of order by type (index 1). Eg. [[majorid, sname], [asc, desc]]
 		}
 
-		return new QueryData(fields, tables, pred, sortFields, aggFields, groupList, isDistinct);
+		return new QueryData(fields, tables, pred, sortFields, aggFields, aggOrder, groupList, isDistinct);
 	}
 
 	
@@ -139,86 +140,102 @@ public class Parser {
 	 * @return L the array list of selection fields
 	 */
 	private List<String> selectList() {
-		List<String> L = new ArrayList<String>();
-		
-		//Check for aggregate function
-		if (lex.matchAggregate()) {
-			String aggFn = lex.eatAggregate();
-			// list of aggregation functions
+	    List<String> L = new ArrayList<String>();
+	    
+	    //Check for aggregate function
+	    if (lex.matchAggregate()) {
+	      String aggFn = lex.eatAggregate();
+	      // list of aggregation functions
 
-			lex.eatDelim('(');
-			String fldname = field();
-			L.add(fldname);
-			lex.eatDelim(')');
-			switch (aggFn) {
-			case "min": {
-				aggFields.add(new MinFn(fldname));
-				break;
-			}
-			case "max": {
-				aggFields.add(new MaxFn(fldname));
-				break;
-			}
-			case "sum": {
-				aggFields.add(new SumFn(fldname));
-				break;
-			}
-			case "count": {
-				aggFields.add(new CountFn(fldname));
-				break;
-			}
-			case "avg": {
-				aggFields.add(new AvgFn(fldname));
-				break;
-			}
-			}
+	      lex.eatDelim('(');
+	      String fldname = field();
+	      L.add(fldname);
+	      lex.eatDelim(')');
+	      switch (aggFn) {
+	        case "min": {
+	          aggFields.add(new MinFn(fldname));
+	          aggOrder.add(new MinFn(fldname).fieldName());
+	          break;
+	        }
+	        case "max": {
+	          aggFields.add(new MaxFn(fldname));
+	          aggOrder.add(new MaxFn(fldname).fieldName());
+	          break;
+	        }
+	        case "sum": {
+	          aggFields.add(new SumFn(fldname));
+	          aggOrder.add(new SumFn(fldname).fieldName());
+	          break;
+	        }
+	        case "count": {
+	          aggFields.add(new CountFn(fldname));
+	          aggOrder.add(new CountFn(fldname).fieldName());
+	          break;
+	        }
+	        case "avg": {
+	          aggFields.add(new AvgFn(fldname));
+	          aggOrder.add(new AvgFn(fldname).fieldName());
+	          break;
+	        }
+	      }
 
-		} else {
-			L.add(field());
-		}
-		
-		//While there are more fields, do the same as above.
-		while (lex.matchDelim(',')) {
-			lex.eatDelim(',');
-			if (lex.matchAggregate()) {
-				String aggFn = lex.eatAggregate();
-				// list of aggregation functions
+	    } else {
+	      String fldname = field();
+	      aggOrder.add(fldname);
+	      L.add(fldname);
+	      
+	    }
+	    
+	    //While there are more fields, do the same as above.
+	    while (lex.matchDelim(',')) {
+	      lex.eatDelim(',');
+	      if (lex.matchAggregate()) {
+	        String aggFn = lex.eatAggregate();
+	        // list of aggregation functions
 
-				lex.eatDelim('(');
-				String fldname = field();
-				if (!L.contains(fldname)) {
-					L.add(fldname);
-				}
-				lex.eatDelim(')');
-				switch (aggFn) {
-				case "min": {
-					aggFields.add(new MinFn(fldname));
-					break;
-				}
-				case "max": {
-					aggFields.add(new MaxFn(fldname));
-					break;
-				}
-				case "sum": {
-					aggFields.add(new SumFn(fldname));
-					break;
-				}
-				case "count": {
-					aggFields.add(new CountFn(fldname));
-					break;
-				}
-				case "avg": {
-					aggFields.add(new AvgFn(fldname));
-					break;
-				}
-				}
+	        lex.eatDelim('(');
+	        String fldname = field();
+	        if (!L.contains(fldname)) {
+	          L.add(fldname);
+	        }
+	        lex.eatDelim(')');
+	        switch (aggFn) {
+	        case "min": {
+	          aggFields.add(new MinFn(fldname));
+	          aggOrder.add(new MinFn(fldname).fieldName());
+	          break;
+	        }
+	        case "max": {
+	          aggFields.add(new MaxFn(fldname));
+	          aggOrder.add(new MaxFn(fldname).fieldName());
+	          break;
+	        }
+	        case "sum": {
+	          aggFields.add(new SumFn(fldname));
+	          aggOrder.add(new SumFn(fldname).fieldName());
+	          break;
+	        }
+	        case "count": {
+	          aggFields.add(new CountFn(fldname));
+	          aggOrder.add(new CountFn(fldname).fieldName());
+	          break;
+	        }
+	        case "avg": {
+	          aggFields.add(new AvgFn(fldname));
+	          aggOrder.add(new AvgFn(fldname).fieldName());
+	          break;
+	        }
+	      }
 
-			} else {				
-				L.add(field());
-			}
-		}
-		return L;
-	}
+	    } else {
+	      String fldname = field();
+	      aggOrder.add(fldname);
+	      L.add(fldname);
+	      
+	    }
+	    }
+	    return L;
+	  }
 
 	/**
 	 * Method to add corresponding table name to the list L.

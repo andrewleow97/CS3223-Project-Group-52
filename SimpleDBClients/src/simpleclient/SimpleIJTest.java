@@ -32,7 +32,7 @@ public class SimpleIJTest {
 //	  queries.add("create index DId on dept (did) using btree");
 //	  queries.add("create index CId on course (cid) using hash");
 	  
-	  //Test index select
+//	  //Test index select
 //	  queries.add("select sid from student where sid = 5");
 //	  queries.add("select sid from student where sid < 5");
 //	  queries.add("select sid from student where sid > 5");
@@ -50,7 +50,7 @@ public class SimpleIJTest {
 //	  queries.add("select avg (sid) from student");
 //	  queries.add("select avg (majorid) from student");
 //	  queries.add("select count (majorid) from student");
-//	  
+	  
 //	  //Test distinct
 //	  queries.add("select distinct deptid from course");
 //	  queries.add("select distinct GradYear, majorid from student order by gradyear, majorid");
@@ -63,10 +63,15 @@ public class SimpleIJTest {
 //	  queries.add("select majorid, sid from student order by majorid asc, sid desc");
 //	  
 //	  //Test group by
-//	  queries.add("select count (sname), gradyear from student group by gradyear");
-//	  queries.add("select count (sname), gradyear from student group by gradyear order by gradyear desc");
-//	  queries.add("select deptid, min (cid) from course group by deptid");
-//	  queries.add("select deptid, avg (cid) from course group by deptid");
+	  queries.add("select count (sname), gradyear from student group by gradyear");
+	  queries.add("select count (sname), gradyear from student group by gradyear order by gradyear desc");
+	  queries.add("select deptid, min (cid) from course group by deptid");
+	  queries.add("select deptid, avg (cid) from course group by deptid");
+	  queries.add("select count(gradyear), gradyear from student group by gradyear");
+	  queries.add("select min(sid), count(majorid), sum(gradyear), gradyear from student group by gradyear");
+	  queries.add("select gradyear, min(sid), max(majorid), count(gradyear) from student group by gradyear");
+	  queries.add("select count(gradyear), gradyear from student group by gradyear");
+	  
 //	  
 //	  //2 table queries
 	  //Equality
@@ -85,12 +90,12 @@ public class SimpleIJTest {
 //	  queries.add("select did, deptid, dname, cid from dept, course where did <> deptid");
 //	  queries.add("select did, deptid, dname, cid from dept, course where did != deptid");
 //	  
-	  //4 table queries
-	  //Equality
-	  queries.add("select sid, dname from student, dept, course, enroll where majorid = did and did = deptid and sid = studentid order by sid desc");
-	  //Non equi
-	  queries.add("select sid, majorid, did, deptid, prof from student, dept, course, section where majorid <> did and did = deptid and cid = courseid");
-	  queries.add("select sid, majorid, did, deptid, prof from student, dept, course, section where majorid <> did and did = deptid and cid < courseid");
+//	  //4 table queries
+//	  //Equality
+//	  queries.add("select sid, dname from student, dept, course, enroll where majorid = did and did = deptid and sid = studentid order by sid desc");
+//	  //Non equi
+//	  queries.add("select sid, majorid, did, deptid, prof from student, dept, course, section where majorid <> did and did = deptid and cid = courseid");
+//	  queries.add("select sid, majorid, did, deptid, prof from student, dept, course, section where majorid <> did and did = deptid and cid < courseid");
 
 	  
 	  queries.add("exit");

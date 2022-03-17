@@ -15,6 +15,7 @@ public class GroupByPlan implements Plan {
    private List<String> groupfields;
    private List<AggregationFn> aggfns;
    private Schema sch = new Schema();
+   private boolean inGroupFlag = false;
    
    /**
     * Create a groupby plan for the underlying query.
@@ -27,14 +28,30 @@ public class GroupByPlan implements Plan {
     * @param aggfns the aggregation functions
     * @param tx the calling transaction
     */
-   public GroupByPlan(Transaction tx, Plan p, List<String> groupfields, List<AggregationFn> aggfns) { // [sname, majorid, gradyear]
+   public GroupByPlan(Transaction tx, Plan p, List<String> fields, List<String> groupfields, List<AggregationFn> aggfns, List<String> aggOrder) { // [sname, majorid, gradyear]
       this.p = new SortPlan(tx, p, groupfields);
       this.groupfields = groupfields;
       this.aggfns = aggfns;
-      for (String fldname : groupfields)
-         sch.add(fldname, p.schema());
-      for (AggregationFn fn : aggfns)
-         sch.addIntField(fn.fieldName());
+
+      for (String fldname : aggOrder) {
+        for (String a : groupfields) {
+          if (a.equals(fldname)) {
+            sch.add(fldname,  p.schema());
+            inGroupFlag = true;
+            break;
+          }
+        }
+        if (inGroupFlag) {
+          inGroupFlag = false;
+          continue;
+        }
+        for (AggregationFn b : aggfns) {
+          if (b.fieldName().contains(fldname)) {
+            sch.addIntField(b.fieldName());
+          }
+            
+        }
+      }
    }
    
    /**
