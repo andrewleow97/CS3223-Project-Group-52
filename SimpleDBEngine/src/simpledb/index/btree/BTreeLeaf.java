@@ -57,7 +57,7 @@ public class BTreeLeaf {
          return tryOverflow();
       else if (isValid(contents.getDataVal(currentslot), searchkey)) { 
     	  // iterate to next 
-    	  while (isValid(contents.getDataVal(currentslot), searchkey)) {
+    	  while (isValid(contents.getDataVal(currentslot), searchkey) && currentslot < contents.getNumRecs()) {
     		  if (isSatisfied(contents.getDataVal(currentslot), searchkey))
     			  return true;
     		  currentslot++;
