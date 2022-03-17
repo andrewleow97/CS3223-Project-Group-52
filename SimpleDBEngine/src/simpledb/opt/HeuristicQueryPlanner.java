@@ -190,7 +190,11 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		          
 		          // joinindex does not contain an index on current table, means is normal scan of table. Do not increment ijoinindex as table is not using any index.
 		          if (indexAtJoinIndex < 0) {
-		            s += "(" + table + ")";
+		        	  if(i == 0 && queryPlan.get("selectindex").size() > 0) {
+		        		  s += "(" + queryPlan.get("selectindex").get(i*2 + 1) + " select on " + queryPlan.get("table").get(i) + ")";
+		        	  } else {
+		        		  s += "(" + table + ")";
+		        	  }
 		            s += " " + queryPlan.get("join").get(i) + " "; //append join algo
 		            continue;
 		          }
@@ -207,7 +211,11 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 		          
 		        // table @ iJoinIndex is not an index join algo, means is normal scan of table.
 		        } else {
-		          s += "(" + table + ")";
+		        	if(i == 0 && queryPlan.get("selectindex").size() > 0) {
+		        		  s += "(" + queryPlan.get("selectindex").get(i*2 + 1) + " select on " + queryPlan.get("table").get(i) + ")";
+		        	  } else {
+		        		  s += "(" + table + ")";
+		        	  }
 		          if (i != queryPlan.get("table").size()-1) {
 		            s += " " + queryPlan.get("join").get(i) + " ";
 		          }
