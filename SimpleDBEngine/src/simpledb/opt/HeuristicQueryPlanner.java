@@ -86,7 +86,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			currentplan = new GroupByPlan(tx, currentplan, data.groupList(), data.aggFields());
 		}
 		
-		
+		//System.out.println(queryPlan);
 		getQueryPlan(); // Output query plan
 		
 		
@@ -235,7 +235,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 					}
 					//If there is an index used on the select pred
 					if(fldname != null) {
-						s += "(" + queryPlan.get("selectindex").get(i*2 + 1) + " index on " + queryPlan.get("table").get(i) + ")";
+						s += "(" + queryPlan.get("selectindex").get(i*2 + 1) + " select on " + queryPlan.get("table").get(i) + ")";
 					} else {
 						s += "(" + queryPlan.get("table").get(i) + ")";
 					}

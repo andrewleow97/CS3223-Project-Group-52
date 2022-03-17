@@ -18,16 +18,15 @@ public class SimpleIJTest {
 
 	  ArrayList<String> queries = new ArrayList<>();
 	  
-//	  queries.add("select");
-//	  //Test operators
-//	  queries.add("select majorid from student");
-//	  queries.add("select majorid from student where majorid = 10");
-//	  queries.add("select majorid from student where majorid < 30");
-//	  queries.add("select majorid from student where majorid <= 30");
-//	  queries.add("select majorid from student where majorid > 30");
-//	  queries.add("select majorid from student where majorid >= 30");
-//	  queries.add("select majorid from student where majorid <> 30");
-//	  queries.add("select majorid from student where majorid != 30");
+	  //Test operators
+	  queries.add("select majorid from student");
+	  queries.add("select majorid from student where majorid = 10");
+	  queries.add("select majorid from student where majorid < 30");
+	  queries.add("select majorid from student where majorid <= 30");
+	  queries.add("select majorid from student where majorid > 30");
+	  queries.add("select majorid from student where majorid >= 30");
+	  queries.add("select majorid from student where majorid <> 30");
+	  queries.add("select majorid from student where majorid != 30");
 //	  
 	  //Test index creation
 //	  queries.add("create index DId on dept (did) using btree");
