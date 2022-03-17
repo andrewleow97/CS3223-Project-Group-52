@@ -45,17 +45,24 @@ public class IndexInfo {
    }
    
    /**
-    * Open the index described by this object.
+    * Open the index(hash/btree) described by this object.
+    * 
     * @return the Index object associated with this information
     */
-   public Index open() {
-	if (this.indexType.equals("hash")) {   
+   public Index open() {  
+	 if (this.indexType.equals("hash")) {   
 		return new HashIndex(tx, idxname, idxLayout);
-	} else {
+	 } else {
 		return new BTreeIndex(tx, idxname, idxLayout);
-	}
+	 }	
    }
    
+   
+   /**
+    * Return the type of index
+    * 
+    * @return String the index type
+    */
    public String getIndexType() {
 	   return indexType;
    }

@@ -34,7 +34,7 @@ public class Lexer {
 		tok.wordChars('=', '='); // allow "=" in identifiers
 		tok.wordChars('!', '!'); // allow "!" in identifiers
 
-		tok.lowerCaseMode(true); // ids and keywords are converted
+		tok.lowerCaseMode(true); // ids and keywords are converted to lowercase
 		nextToken();
 	}
 
@@ -108,16 +108,16 @@ public class Lexer {
 	}
 
 	/**
-	 * Returns true if the current token is in the specified index list.
+	 * Returns true if the current token is in the specified aggregate list.
 	 * 
 	 * @param w the comparator string
-	 * @return true if that index is the current token
+	 * @return true if that aggregate is the current token
 	 */
 	public boolean matchAggregate() {
 		return tok.ttype == StreamTokenizer.TT_WORD && aggregates.contains(tok.sval);
 	}
 
-//Methods to "eat" the current token
+	//Methods to "eat" the current token
 
 	/**
 	 * Throws an exception if the current token is not the specified delimiter.
@@ -175,7 +175,6 @@ public class Lexer {
 	 * Throws an exception if the current token is not in the specified operator
 	 * list. Otherwise, moves to the next token.
 	 * 
-	 * @param w the operator string
 	 * @return s the operator string
 	 */
 	public String eatOpr() {
@@ -204,7 +203,6 @@ public class Lexer {
 	 * Throws an exception if the current token is not in the specified index list.
 	 * Otherwise, moves to the next token.
 	 * 
-	 * @param w the index string
 	 * @return s the index string
 	 */
 	public String eatIndex() {
@@ -215,6 +213,12 @@ public class Lexer {
 		return s;
 	}
 
+	/**
+	 * Throws an exception if the current token is not in the specified aggregate list.
+	 * Otherwise, moves to the next token.
+	 * 
+	 * @return s the aggregate string
+	 */
 	public String eatAggregate() {
 		if (!matchAggregate())
 			throw new BadSyntaxException();
@@ -223,6 +227,10 @@ public class Lexer {
 		return s;
 	}
 
+	
+	/**
+	 * Move to the next token
+	 */
 	private void nextToken() {
 		try {
 			tok.nextToken();
@@ -231,20 +239,32 @@ public class Lexer {
 		}
 	}
 
+	/**
+	 * Store the specified list of keywords
+	 */
 	private void initKeywords() {
 		keywords = Arrays.asList("select", "from", "where", "and", "insert", "into", "values", "delete", "update",
 				"set", "create", "table", "int", "varchar", "view", "as", "index", "on", "using", "order", "by", "asc",
 				"desc", "distinct");
 	}
 
+	/**
+	 * Store the specified list of comparators
+	 */
 	private void initComparators() {
 		comparators = Arrays.asList("=", "<", "<=", ">", ">=", "!=", "<>");
 	}
 
+	/**
+	 * Store the specified list of indexes type
+	 */
 	private void initIndex() {
 		indexes = Arrays.asList("hash", "btree");
 	}
 
+	/**
+	 * Store the specified list of aggregate functions
+	 */
 	private void initAggregates() {
 		aggregates = Arrays.asList("min", "max", "sum", "count", "avg");
 	}
