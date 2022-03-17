@@ -86,12 +86,12 @@ public class SimpleIJTest {
 //	  queries.add("select did, deptid, dname, cid from dept, course where did <> deptid");
 //	  queries.add("select did, deptid, dname, cid from dept, course where did != deptid");
 //	  
-//	  //4 table queries
-//	  //Equality
-//	  queries.add("select sid, dname from student, dept, course, enroll where majorid = did and did = deptid and sid = studentid order by sid desc");
-//	  //Non equi
-//	  queries.add("select sid, majorid, did, deptid, prof from student, dept, course, section where majorid <> did and did = deptid and cid = courseid");
-//	  queries.add("select sid, majorid, did, deptid, prof from student, dept, course, section where majorid <> did and did = deptid and cid < courseid");
+	  //4 table queries
+	  //Equality
+	  queries.add("select sid, dname from student, dept, course, enroll where majorid = did and did = deptid and sid = studentid order by sid desc");
+	  //Non equi
+	  queries.add("select sid, majorid, did, deptid, prof from student, dept, course, section where majorid <> did and did = deptid and cid = courseid");
+	  queries.add("select sid, majorid, did, deptid, prof from student, dept, course, section where majorid <> did and did = deptid and cid < courseid");
 
 	  
 	  queries.add("exit");

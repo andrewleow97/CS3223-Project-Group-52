@@ -55,8 +55,10 @@ public class SimpleDB {
          tx.recover();
       }
       mdm = new MetadataMgr(isnew, tx);
+      //1st pair does not support indexing
 //      QueryPlanner qp = new BasicQueryPlanner(mdm);
 //      UpdatePlanner up = new BasicUpdatePlanner(mdm);
+      //2nd pair supports indexing
       QueryPlanner qp = new HeuristicQueryPlanner(mdm);
       UpdatePlanner up = new IndexUpdatePlanner(mdm);
       planner = new Planner(qp, up);
