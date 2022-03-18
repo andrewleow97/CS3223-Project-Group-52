@@ -18,8 +18,6 @@ public class NestedLoopPlan implements Plan {
    
    /**
     * Creates a nestedloopjoin plan for the two specified queries.
-    * The RHS must be materialized after it is sorted, 
-    * in order to deal with possible duplicates.
     * @param p1 the LHS query plan
     * @param p2 the RHS query plan
     * @param fldname1 the LHS join field
@@ -37,9 +35,9 @@ public class NestedLoopPlan implements Plan {
       sch.addAll(p2.schema());
    }
    
-   /** The method first sorts its two underlying scans
-     * on their join field. It then returns a nestedloopjoin scan
-     * of the two sorted table scans.
+   /** The method first opens a scan on each plan.
+     * It then returns a nestedloopjoin scan
+     * of the two table scans.
      * @see simpledb.plan.Plan#open()
      */
    public Scan open() {
@@ -50,18 +48,14 @@ public class NestedLoopPlan implements Plan {
    }
    
    /**
-    * Return the number of block acceses required to
-    * nestedloopjoin the sorted tables.
-    * Since a nestedloopjoin can be preformed with a single
-    * pass through each table, the method returns
-    * the sum of the block accesses of the 
-    * materialized sorted tables.
-    * It does <i>not</i> include the one-time cost
-    * of materializing and sorting the records.
+    * Return the number of block accesses required to
+    * nestedloopjoin the tables.
+    * The join is computed based on the formula |R|+|S|*||R||
+    * 
     * @see simpledb.plan.Plan#blocksAccessed()
     */
    public int blocksAccessed() {
-      return p1.blocksAccessed() + p2.blocksAccessed() * p1.blocksAccessed() * p1.recordsOutput();
+      return p1.blocksAccessed() + p2.blocksAccessed() * p1.recordsOutput();
    }
    
    /**

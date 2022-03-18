@@ -13,6 +13,7 @@ import simpledb.record.*;
  */
 public class Parser {
 	private Lexer lex;
+	private List<String> aggOrder = new ArrayList<>();
 
 	private List<AggregationFn> aggFields = new ArrayList<>();
 
@@ -22,10 +23,19 @@ public class Parser {
 
 // Methods for parsing predicates, terms, expressions, constants, and fields
 
+	
+	/**
+	 * Returns the field name
+	 * @return field name
+	 */
 	public String field() {
 		return lex.eatId();
 	}
 
+	/**
+	 * Returns the constant value which can be int or string
+	 * @return constant value which can be int or string
+	 */
 	public Constant constant() {
 		if (lex.matchStringConstant())
 			return new Constant(lex.eatStringConstant());
@@ -33,6 +43,10 @@ public class Parser {
 			return new Constant(lex.eatIntConstant());
 	}
 
+	/**
+	 * Returns either constant value or field
+	 * @return either constant value or field
+	 */
 	public Expression expression() {
 		if (lex.matchId())
 			return new Expression(field());
@@ -40,6 +54,14 @@ public class Parser {
 			return new Expression(constant());
 	}
 
+	/**
+	 * Split the predicate to 
+	 * lhs = field
+	 * operator
+	 * rhs = field or constant
+	 * 
+	 * @return Term
+	 */
 	public Term term() {
 		Expression lhs = expression();
 		String opr = lex.eatOpr();
@@ -47,6 +69,10 @@ public class Parser {
 		return new Term(lhs, rhs, opr);
 	}
 
+	/**
+	 * Return the predicate
+	 * @return the predicate
+	 */
 	public Predicate predicate() {
 		Predicate pred = new Predicate(term());
 		if (lex.matchKeyword("and")) {
@@ -58,130 +84,164 @@ public class Parser {
 
 // Methods for parsing queries
 
+	/**
+	 * Method to decode the query, get the relevant fields and predicate
+	 * and add to the relevant lists
+	 * 
+	 * @return QueryData with the relevant lists
+	 */
 	public QueryData query() throws BadSyntaxException {
 		List<List<String>> sortFields = null;
 		List<String> groupList = null;
 		lex.eatKeyword("select");
 
+		//Check for distinct
 		boolean isDistinct = false;
 		if(lex.matchKeyword("distinct")) {
 			lex.eatKeyword("distinct");
 			isDistinct = true;
 		}
 		
-		List<String> fields = selectList();
-//select field1, agg(field2), field3 from smth
-		
-
-		
+		List<String> fields = selectList();		
 		
 		lex.eatKeyword("from");
 		Collection<String> tables = tableList();
 		Predicate pred = new Predicate();
 
+		//Check for where statement
 		if (lex.matchKeyword("where")) {
 			lex.eatKeyword("where");
-			pred = predicate();
+			pred = predicate(); //Store predicates (Join and select) into pred.
 		}
 
+		//Check for group by
 		if (lex.matchKeyword("group")) {
 			lex.eatKeyword("group");
 			lex.eatKeyword("by");
-			groupList = groupList();
+			groupList = groupList(); //Store fields to be group by into groupList
 		}
 
+		//Check for order by
 		if (lex.matchKeyword("order")) {
 			lex.eatKeyword("order");
 			lex.eatKeyword("by");
-			sortFields = sortList();
+			sortFields = sortList(); //Store list of fields (index 0) and list of order by type (index 1). Eg. [[majorid, sname], [asc, desc]]
 		}
 
-		return new QueryData(fields, tables, pred, sortFields, aggFields, groupList, isDistinct);
+		return new QueryData(fields, tables, pred, sortFields, aggFields, aggOrder, groupList, isDistinct);
 	}
 
+	
+	/**
+	 * Method to add corresponding aggregate functions to aggFields if exists and 
+	 * add selection fields to array list L.
+	 * While there are more fields (checking comma), repeat the above.
+	 * 
+	 * @return L the array list of selection fields
+	 */
 	private List<String> selectList() {
-		List<String> L = new ArrayList<String>();
-		// if match agg -> agg logic
-		if (lex.matchAggregate()) {
-			String aggFn = lex.eatAggregate();
-			// list of aggregation functions
+	    List<String> L = new ArrayList<String>();
+	    
+	    //Check for aggregate function
+	    if (lex.matchAggregate()) {
+	      String aggFn = lex.eatAggregate();
+	      // list of aggregation functions
 
-			lex.eatDelim('(');
-			String fldname = field();
-			L.add(fldname);
-			lex.eatDelim(')');
-			switch (aggFn) {
-			case "min": {
-				aggFields.add(new MinFn(fldname));
-				break;
-			}
-			case "max": {
-				aggFields.add(new MaxFn(fldname));
-				break;
-			}
-			case "sum": {
-				aggFields.add(new SumFn(fldname));
-				break;
-			}
-			case "count": {
-				aggFields.add(new CountFn(fldname));
-				break;
-			}
-			case "avg": {
-				aggFields.add(new AvgFn(fldname));
-				break;
-			}
-			}
+	      lex.eatDelim('(');
+	      String fldname = field();
+	      L.add(fldname);
+	      lex.eatDelim(')');
+	      switch (aggFn) {
+	        case "min": {
+	          aggFields.add(new MinFn(fldname));
+	          aggOrder.add(new MinFn(fldname).fieldName());
+	          break;
+	        }
+	        case "max": {
+	          aggFields.add(new MaxFn(fldname));
+	          aggOrder.add(new MaxFn(fldname).fieldName());
+	          break;
+	        }
+	        case "sum": {
+	          aggFields.add(new SumFn(fldname));
+	          aggOrder.add(new SumFn(fldname).fieldName());
+	          break;
+	        }
+	        case "count": {
+	          aggFields.add(new CountFn(fldname));
+	          aggOrder.add(new CountFn(fldname).fieldName());
+	          break;
+	        }
+	        case "avg": {
+	          aggFields.add(new AvgFn(fldname));
+	          aggOrder.add(new AvgFn(fldname).fieldName());
+	          break;
+	        }
+	      }
 
-		} else {
-//		else field
-			
-			L.add(field());
-		}
-		while (lex.matchDelim(',')) {
-			lex.eatDelim(',');
-			if (lex.matchAggregate()) {
-				String aggFn = lex.eatAggregate();
-				// list of aggregation functions
+	    } else {
+	      String fldname = field();
+	      aggOrder.add(fldname);
+	      L.add(fldname);
+	      
+	    }
+	    
+	    //While there are more fields, do the same as above.
+	    while (lex.matchDelim(',')) {
+	      lex.eatDelim(',');
+	      if (lex.matchAggregate()) {
+	        String aggFn = lex.eatAggregate();
+	        // list of aggregation functions
 
-				lex.eatDelim('(');
-				String fldname = field();
-				if (!L.contains(fldname)) {
-					L.add(fldname);
-				}
-				lex.eatDelim(')');
-				switch (aggFn) {
-				case "min": {
-					aggFields.add(new MinFn(fldname));
-					break;
-				}
-				case "max": {
-					aggFields.add(new MaxFn(fldname));
-					break;
-				}
-				case "sum": {
-					aggFields.add(new SumFn(fldname));
-					break;
-				}
-				case "count": {
-					aggFields.add(new CountFn(fldname));
-					break;
-				}
-				case "avg": {
-					aggFields.add(new AvgFn(fldname));
-					break;
-				}
-				}
+	        lex.eatDelim('(');
+	        String fldname = field();
+	        if (!L.contains(fldname)) {
+	          L.add(fldname);
+	        }
+	        lex.eatDelim(')');
+	        switch (aggFn) {
+	        case "min": {
+	          aggFields.add(new MinFn(fldname));
+	          aggOrder.add(new MinFn(fldname).fieldName());
+	          break;
+	        }
+	        case "max": {
+	          aggFields.add(new MaxFn(fldname));
+	          aggOrder.add(new MaxFn(fldname).fieldName());
+	          break;
+	        }
+	        case "sum": {
+	          aggFields.add(new SumFn(fldname));
+	          aggOrder.add(new SumFn(fldname).fieldName());
+	          break;
+	        }
+	        case "count": {
+	          aggFields.add(new CountFn(fldname));
+	          aggOrder.add(new CountFn(fldname).fieldName());
+	          break;
+	        }
+	        case "avg": {
+	          aggFields.add(new AvgFn(fldname));
+	          aggOrder.add(new AvgFn(fldname).fieldName());
+	          break;
+	        }
+	      }
 
-			} else {
-//			else field
-				
-				L.add(field());
-			}
-		}
-		return L;
-	}
+	    } else {
+	      String fldname = field();
+	      aggOrder.add(fldname);
+	      L.add(fldname);
+	      
+	    }
+	    }
+	    return L;
+	  }
 
+	/**
+	 * Method to add corresponding table name to the list L.
+	 * 
+	 * @return L the array list of selection fields
+	 */
 	private Collection<String> tableList() {
 		Collection<String> L = new ArrayList<String>();
 		L.add(lex.eatId());
@@ -193,9 +253,9 @@ public class Parser {
 	}
 
 	/**
-	 * Method to parse out sorting clauses proceeding the order by keyword While
-	 * commas exist it will keep looking for more fields to add into the two
-	 * temporary lists
+	 * Method to parse out sorting clauses proceeding the order by keyword While there are
+	 * more fields to be sorted by (check for commas) it will keep looking for more fields to add 
+	 * into the two temporary lists
 	 * 
 	 * @return The list of list of strings containing the fields and order to be
 	 *         sorted in
@@ -204,7 +264,7 @@ public class Parser {
 		List<List<String>> L = new ArrayList<List<String>>();
 
 		String id = field();
-		String order = "asc";
+		String order = "asc"; //default ordering is asc
 		if (lex.matchKeyword("desc")) {
 			lex.eatKeyword("desc");
 			order = "desc";
@@ -213,8 +273,9 @@ public class Parser {
 			order = "asc";
 		}
 
-		List<String> fieldList = new ArrayList<String>();
-		List<String> orderList = new ArrayList<String>();
+		//Index position of fieldList and orderList will match to get fields and order type.
+		List<String> fieldList = new ArrayList<String>(); //Store fields to be ordered.
+		List<String> orderList = new ArrayList<String>(); //Store order type of corresponding fields in fieldList.
 		fieldList.add(id);
 		orderList.add(order);
 
@@ -233,18 +294,22 @@ public class Parser {
 
 			fieldList.add(id);
 			orderList.add(order);
-
 		}
 		L.add(fieldList);
 		L.add(orderList);
 		return L;
 	}
 
+	/**
+	 * Method to parse out group by clauses.
+	 * 
+	 * @return The list of list of strings containing the fields to be
+	 *         group by
+	 */
 	private List<String> groupList() {
 
 		List<String> L = new ArrayList<String>();
 
-//		else field
 		L.add(field());
 
 		if (lex.matchDelim(',')) {
@@ -255,7 +320,7 @@ public class Parser {
 	}
 
 // Methods for parsing the various update commands
-
+	
 	public Object updateCmd() {
 		if (lex.matchKeyword("insert"))
 			return insert();
@@ -397,6 +462,13 @@ public class Parser {
 
 //  Method for parsing create index commands
 
+	
+	/**
+	 * Method to create index. 
+	 * SQL Query format Create index "index_name" on "table name" ("attribute") using "index type"
+	 * 
+	 * @return CreateIndexData class
+	 */
 	public CreateIndexData createIndex() {
 		lex.eatKeyword("index");
 		String idxname = lex.eatId();

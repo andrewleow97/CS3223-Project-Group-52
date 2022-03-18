@@ -46,8 +46,8 @@ public class BTreeLeaf {
    }
 
    /**
-    * Moves to the next leaf record having the 
-    * previously-specified search key.
+    * Moves to the next leaf record that satisfies the condition 
+    * of the operator and search key.
     * Returns false if there is no more such records.
     * @return false if there are no more leaf records for the search key
     */
@@ -57,7 +57,7 @@ public class BTreeLeaf {
          return tryOverflow();
       else if (isValid(contents.getDataVal(currentslot), searchkey)) { 
     	  // iterate to next 
-    	  while (isValid(contents.getDataVal(currentslot), searchkey)) {
+    	  while (isValid(contents.getDataVal(currentslot), searchkey) && currentslot < contents.getNumRecs()) {
     		  if (isSatisfied(contents.getDataVal(currentslot), searchkey))
     			  return true;
     		  currentslot++;
@@ -68,12 +68,22 @@ public class BTreeLeaf {
          return tryOverflow();
    }
    
-   // set currentslot to search for the first block
+
+   /**
+    * Sets currentslot to search for the first block
+    */
    public void pushFirst() {
 	   currentslot = -1;
    }
    
-   // Check if current tuple is valid
+   /**
+    * Checks if record pointed to by currentslot is valid to iterate 
+    * over based on the operator and search key. 
+    * Ensures that only valid records are iterated over such that a range of records
+    * can be obtained if operator is not "=".
+    * Returns false if the record is not valid.
+    * @return false if there are no more valid leaf records 
+    */
    private boolean isValid(Constant lhs, Constant rhs) {
 	   switch(this.opr) {
 	      case "=":
@@ -94,6 +104,13 @@ public class BTreeLeaf {
 			  return false;  
 	      }
    }
+   
+   /**
+    * Checks if record pointed to by currentslot satisfies the operator and search key.
+    * Returns true if LHS opr RHS is true.
+    * Returns false if the above condition is not satisfied.
+    * @return false if there are no more valid leaf records 
+    */
    private boolean isSatisfied(Constant lhs, Constant rhs) {
 	   switch(this.opr) {
 	      case "=":
@@ -190,6 +207,12 @@ public class BTreeLeaf {
       }
    }
 
+   /**
+    * Checks for overflow chains.
+    * Returns true if new block is obtained and valid.
+    * Returns false if no more valid records.
+    * @return false if there are no more valid leaf records 
+    */
    private boolean tryOverflow() {
       Constant firstkey = contents.getDataVal(0);
       int flag = contents.getFlag();

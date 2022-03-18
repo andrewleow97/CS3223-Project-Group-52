@@ -54,7 +54,7 @@ public class SortMergeTest {
 	}
 
 	private static void useMergeScan(Transaction tx, Plan p1, Plan p2, String fldname1, String fldname2) {
-		// Open an index join scan on the table.
+		// Open an merge join scan on the table.
 		Plan mergePlan = new MergeJoinPlan(tx, p1, p2, fldname1, fldname2);
 		Scan s = mergePlan.open();
 

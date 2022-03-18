@@ -30,7 +30,7 @@ public class SortPlan implements Plan {
    }
    
    /**
-    * Create a sort plan for the specified query.
+    * Create a sort plan in with specified order for the specified query.
     * @param p the plan for the underlying query
     * @param sortfields the fields to sort by
     * @param order the order to sort the fields by
@@ -54,7 +54,7 @@ public class SortPlan implements Plan {
       List<TempTable> runs = splitIntoRuns(src);
       
       src.close();
-      while (runs.size() > 1) // change to 1 for 1 sorted run?
+      while (runs.size() > 1)
          runs = doAMergeIteration(runs);
       return new SortScan(runs, comp);
    }
@@ -101,6 +101,11 @@ public class SortPlan implements Plan {
       return sch;
    }
    
+   /**
+    * Split the scan into multiple runs of same value.
+    * @param src the scan to split
+    * @return the temp variable containing multiple runs
+    */
    private List<TempTable> splitIntoRuns(Scan src) {
       List<TempTable> temps = new ArrayList<>();
       src.beforeFirst();
@@ -121,6 +126,11 @@ public class SortPlan implements Plan {
       return temps;
    }
    
+   /**
+    * Merge the split runs into a single sorted run.
+    * @param runs the runs to merge
+    * @return the merged sorted run
+    */
    private List<TempTable> doAMergeIteration(List<TempTable> runs) {
       List<TempTable> result = new ArrayList<>();
       while (runs.size() > 1) {
@@ -133,6 +143,12 @@ public class SortPlan implements Plan {
       return result;
    }
    
+   /**
+    * Merge two runs into a single sorted run.
+    * @param p1 the first run to merge
+    * @param p2 the second run to merge
+    * @return the merged sorted run
+    */
    private TempTable mergeTwoRuns(TempTable p1, TempTable p2) {
       Scan src1 = p1.open();
       Scan src2 = p2.open();
@@ -159,6 +175,11 @@ public class SortPlan implements Plan {
       return result;
    }
    
+   /**
+    * Copy the tuple from source to destination.
+    * @param src the source scan to copy from
+    * @param dest the destination scan to copy to
+    */
    private boolean copy(Scan src, UpdateScan dest) {
       dest.insert();
       for (String fldname : sch.fields())

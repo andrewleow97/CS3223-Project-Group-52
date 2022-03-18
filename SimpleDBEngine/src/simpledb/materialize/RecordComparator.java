@@ -34,7 +34,8 @@ public class RecordComparator implements Comparator<Scan> {
    
    /**
     * Compare the current records of the two specified scans.
-    * The sort fields are considered in turn.
+    * If sort order is specified, consider the sort order and sort fields in order.
+    * Else the sort fields are considered in turn.
     * When a field is encountered for which the records have
     * different values, those values are used as the result
     * of the comparison.

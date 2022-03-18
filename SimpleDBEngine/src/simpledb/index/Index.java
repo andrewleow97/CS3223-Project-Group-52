@@ -52,5 +52,9 @@ public interface Index {
     */
    public void    close();
    
+   /**
+    * Set operator value according to query.
+    * @param opr the operator used for comparison
+    */
    public void setOpr(String opr);
 }

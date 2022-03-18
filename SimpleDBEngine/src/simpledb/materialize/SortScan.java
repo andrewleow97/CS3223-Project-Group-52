@@ -71,7 +71,7 @@ public class SortScan implements Scan {
       if (!hasmore1 && !hasmore2)
          return false;
       else if (hasmore1 && hasmore2) {
-         if (comp.compare(s1, s2) < 0) //here add if statement
+         if (comp.compare(s1, s2) < 0) 
             currentscan = s1;
          else
             currentscan = s2;
@@ -148,6 +148,12 @@ public class SortScan implements Scan {
       if (rid2 != null)
          s2.moveToRid(rid2);
    }
+   
+   /**
+    * Get the field's value from s1
+    * @param fldname the field name of the tuple
+    * @return value of field
+    */
    public Constant getValue(String fldname) {
 	      return s1.getVal(fldname);
 	   }

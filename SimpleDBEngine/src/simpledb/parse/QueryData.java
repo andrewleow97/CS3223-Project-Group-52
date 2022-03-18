@@ -18,6 +18,7 @@ public class QueryData {
    private List<AggregationFn> aggFields;
    private List<String> groupList;
    private boolean isDistinct;
+   private List<String> aggOrder;
    
    /**
     * Saves the field and table list and predicate.
@@ -33,10 +34,11 @@ public class QueryData {
     * Saves the field and table list and predicate with sorting.
     */
    public QueryData(List<String> fields, Collection<String> tables, Predicate pred, 
-		   List<List<String>> sortFields, List<AggregationFn> aggFields, List<String> groupList, boolean isDistinct) {
+		   List<List<String>> sortFields, List<AggregationFn> aggFields, List<String> aggOrder, List<String> groupList, boolean isDistinct) {
       this.fields = fields;
       this.tables = tables;
       this.pred = pred;
+      this.aggOrder = aggOrder;
 
       if (sortFields != null) {
 
@@ -50,7 +52,14 @@ public class QueryData {
     	  this.groupList = groupList;
       }
       this.isDistinct = isDistinct;
-      
+   }
+   
+   /**
+    * Returns the list of aggregates order.
+    * @return the list of aggregates order.
+    */
+   public List<String> aggOrder() {
+	   return aggOrder;
    }
    
    
@@ -80,35 +89,51 @@ public class QueryData {
    }
    
    /**
-    * Returns the list of field namess the output should be sorted
-    * according to
-    * @return the list of field names
+    * Returns the list of field names to be ordered.
+    * @return the list of field names to be ordered.
     */
    public List<String> sortFields() {
 	   return sortFields;
    }
    
    /**
-    * Returns the list of order directions the respective fields should be sorted
-    * according to
-    * @return the list of order directions
+    * Returns the list of order type.
+    * @return the list of order type.
     */
    public List<String> sortOrder() {
 	   return sortOrder;
    }
    
+   
+   /**
+    * Returns the list of aggregates functions.
+    * @return the list of aggregate functions.
+    */
    public List<AggregationFn> aggFields() {
 	   return aggFields;
    }
    
+   /**
+    * Returns the list of fields to be group by.
+    * @return the list of fields to be group by.
+    */
    public List<String> groupList() {
 	   return groupList;
    }
    
+   
+   /**
+    * Returns true if output require to be distinct, else false.
+    * @return true if output require to be distinct, else false.
+    */
    public boolean isDistinct() {
 	   return isDistinct;
    }
    
+   /**
+    * Returns SQL Query (not use at the moment)
+    * @return SQL Query
+    */
    public String toString() {
       String result = "select ";
       for (String fldname : fields)
@@ -132,4 +157,6 @@ public class QueryData {
     	  
       return result;
    }
+   
+   
 }

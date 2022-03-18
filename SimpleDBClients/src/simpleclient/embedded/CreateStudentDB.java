@@ -14,10 +14,12 @@ public class CreateStudentDB {
          stmt.executeUpdate(s);
          System.out.println("Table STUDENT created.");
          
+         //Creating an index on majorid using btree - create before insertion of records
          s = "create index MajorId on student (MajorId) using btree";
          stmt.executeUpdate(s);
          System.out.println("Index indexMajorId_Student on student created.");
 
+       //Creating an index on SID using hash
          s = "create index SID on student (SId) using hash";
          stmt.executeUpdate(s);
          System.out.println("Index indexSID_Student on student created.");
@@ -81,6 +83,7 @@ public class CreateStudentDB {
          stmt.executeUpdate(s);
          System.out.println("Table ENROLL created.");
 
+         //Creating an index on studentid using hash
          s = "create index StudentId on enroll (StudentId) using hash";
          stmt.executeUpdate(s);
          System.out.println("Index indexStudentId_Enroll on enroll created.");

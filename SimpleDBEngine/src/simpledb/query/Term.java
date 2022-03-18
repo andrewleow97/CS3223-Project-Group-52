@@ -17,6 +17,7 @@ public class Term {
     * for equality.
     * @param lhs  the LHS expression
     * @param rhs  the RHS expression
+    * @param opr the operator
     */
    public Term(Expression lhs, Expression rhs, String opr) {
       this.lhs = lhs;
@@ -139,23 +140,43 @@ public class Term {
       return lhs.appliesTo(sch) && rhs.appliesTo(sch);
    }
    
+   /**
+    * Convert the term to string form.
+    * @return term in string form
+    */
    public String toString() {
       return lhs.toString() + opr.toString() + rhs.toString();
    }
    
+   /**
+    * Return the lhs expression in string form.
+    * @return lhs expression in string form
+    */
    public String LHS() {
 	   return lhs.toString();
    }
    
+   /**
+    * Return the rhs expression in string form.
+    * @return rhs expression in string form
+    */
    public String RHS() {
 	   return rhs.toString();
    }
    
+   /**
+    * Return the operator
+    * @return operator
+    */
    public String operator() {
 	   return opr;
    }
    
-   // returns true if both rhs and lhs are fields
+   
+   /**
+    * Check if both rhs and lhs are fields.
+    * @return true if both are fields else false
+    */
    public boolean compareField() {
 	   if (lhs.isFieldName() && rhs.isFieldName()) {
 		   return true;

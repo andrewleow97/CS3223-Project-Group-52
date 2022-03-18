@@ -20,12 +20,14 @@ public class IndexSelectScan implements Scan {
     * index and selection constant.
     * @param idx the index
     * @param val the selection constant
+    * @param opr the operator used to select
     */
    public IndexSelectScan(TableScan ts, Index idx, Constant val, String opr) {
       this.ts  = ts;
       this.idx = idx;
       this.val = val;
-//      System.out.println(idx.getClass().getSimpleName());
+      
+      // store the operator in index if it is B+ Tree
       if (idx.getClass().getSimpleName().equals("BTreeIndex")) {
     	  idx.setOpr(opr);
       }

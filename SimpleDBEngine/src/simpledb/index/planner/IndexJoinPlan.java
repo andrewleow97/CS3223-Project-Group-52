@@ -25,6 +25,7 @@ public class IndexJoinPlan implements Plan {
     * @param p2 the right-hand plan
     * @param ii information about the right-hand index
     * @param joinfield the left-hand field used for joining
+    * @opr opr the operator used for joining
     */
    public IndexJoinPlan(Plan p1, Plan p2, IndexInfo ii, String joinfield, String opr) {
       this.p1 = p1;
