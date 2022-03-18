@@ -103,7 +103,7 @@ public class Parser {
 		}
 		
 		List<String> fields = selectList();		
-		
+
 		lex.eatKeyword("from");
 		Collection<String> tables = tableList();
 		Predicate pred = new Predicate();
@@ -312,9 +312,10 @@ public class Parser {
 
 		L.add(field());
 
-		if (lex.matchDelim(',')) {
+		while (lex.matchDelim(',')) {
 			lex.eatDelim(',');
-			L.addAll(selectList());
+			String fldname = field();
+	        L.add(fldname);
 		}
 		return L;
 	}
