@@ -24,7 +24,6 @@ public class GroupByPlan implements Plan {
     * and the aggregation is computed by the
     * specified collection of aggregation functions.
     * @param p a plan for the underlying query
-    * @param fields the overall fields in the query
     * @param groupfields the group fields
     * @param aggfns the aggregation functions
     * @param tx the calling transaction
