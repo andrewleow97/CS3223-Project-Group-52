@@ -81,8 +81,8 @@ public class HeuristicQueryPlanner implements QueryPlanner {
 			currentplan = new AggregatePlan(tx, currentplan, data.aggFields());
 		}
 
-		//Aggregate functions are being used and have group by clause
-		if (data.groupList() != null && data.aggFields() != null) {
+		// group by clause present or aggregate functions used
+		else if (data.groupList() != null || data.aggFields() != null) {
 			currentplan = new GroupByPlan(tx, currentplan, data.fields(), data.groupList(), data.aggFields(), data.aggOrder());
 		}
 		
