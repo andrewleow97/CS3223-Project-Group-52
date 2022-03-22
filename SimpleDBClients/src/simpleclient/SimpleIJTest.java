@@ -18,11 +18,13 @@ public class SimpleIJTest {
 
 	  ArrayList<String> queries = new ArrayList<>();
 	  
-	  //Test operators
+//	  //Test operators
 //	  queries.add("select majorid from student");
 //	  queries.add("select majorid from student where majorid = 200");
 //	  queries.add("select majorid from student where majorid < 30");
 //	  queries.add("select majorid from student where majorid <= 30");
+//	  queries.add("select majorid from student where majorid > 220");
+//	  queries.add("select majorid from student where majorid >= 220");
 
 //	  
 //	  //Test index creation
